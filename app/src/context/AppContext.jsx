@@ -19,8 +19,8 @@ const DEFAULT_PSODISK = {
 
 const DEFAULT_PROFILE = {
   deviceId: 'T4K3D4',
-  firstName: 'Sarah',
-  lastName: 'Mitchell',
+  firstName: '',
+  lastName: '',
   age: 34,
   email: '',
   emailConsent: false,
@@ -38,7 +38,7 @@ function treatmentPhaseLabel(week) {
   return 'Maintenance phase'
 }
 
-const PROFILE_VERSION = 2 // bump to force-reset cached profiles
+const PROFILE_VERSION = 3 // bump to force-reset cached profiles
 
 function loadProfile() {
   try {

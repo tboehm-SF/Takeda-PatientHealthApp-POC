@@ -13,6 +13,24 @@ import { useApp } from '../context/AppContext'
 const listeners = new Set()
 const eventLog = []
 
+// Beacon session + device state (mirrors c360a pattern)
+let _beaconSessionId = null
+let _beaconDeviceId = null
+
+function getBeaconIds() {
+  if (!_beaconSessionId) {
+    _beaconSessionId = sessionStorage.getItem('d360_session') ||
+      (crypto.randomUUID?.() ?? Math.random().toString(36).slice(2, 18))
+    sessionStorage.setItem('d360_session', _beaconSessionId)
+  }
+  _beaconDeviceId = _beaconDeviceId || 'T4K3D4'
+  return { sessionId: _beaconSessionId, deviceId: _beaconDeviceId }
+}
+
+export function setBeaconDeviceId(id) {
+  _beaconDeviceId = id
+}
+
 export function pushD360Event(name, type = 'engagement', detail) {
   const entry = {
     name,
@@ -25,12 +43,45 @@ export function pushD360Event(name, type = 'engagement', detail) {
   if (eventLog.length > 30) eventLog.length = 30
   listeners.forEach((fn) => fn([...eventLog]))
 
-  // Log to dev console for demo visibility
+  // ──── Structured beacon-style console logging (mirrors c360a debug output) ────
+  const { sessionId, deviceId } = getBeaconIds()
+  const eventId = crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+  const dateTime = new Date().toISOString()
+
+  // Header line
   console.log(
-    `%c[RT D360]%c ${name}`,
+    `%c[Beacon]%c Sent event: %c${name}`,
     'color: #2dc8ce; font-weight: bold;',
     'color: inherit;',
-    { type, detail: detail || '—', time: entry.time },
+    'color: #22c55e; font-weight: bold;',
+    { interaction: { name, type }, source: { channel: 'PatientApp', url: window.location.href }, user: { sessionId, deviceId, isAnonymous: !detail?.email } },
+  )
+
+  // Structured Data Cloud translation (same format as c360a [DEBUG] output)
+  const dcEvent = {
+    eventType: type,
+    eventId,
+    dateTime,
+    sessionId,
+    deviceId,
+    interactionName: name,
+    sourceUrl: window.location.href,
+    sourceChannel: 'PatientApp',
+    category: type === 'identity_resolution' ? 'Profile' : type === 'consent' ? 'Consent' : 'Engagement',
+  }
+
+  if (type === 'identity' || type === 'identity_resolution') {
+    dcEvent.isAnonymous = name.includes('Anonymous') ? 1 : 0
+  }
+  if (detail) {
+    dcEvent.detail = detail
+  }
+
+  console.log(
+    `%c[Beacon]%c Events translated for Data Cloud:`,
+    'color: #0984e3; font-weight: bold;',
+    'color: inherit;',
+    JSON.stringify([dcEvent], null, 2),
   )
 }
 
@@ -45,12 +96,7 @@ function useD360Events() {
 
 // ─────────── Beacon / session ID ───────────
 function getSessionId() {
-  let id = sessionStorage.getItem('d360_session')
-  if (!id) {
-    id = crypto.randomUUID?.() ?? Math.random().toString(36).slice(2, 18)
-    sessionStorage.setItem('d360_session', id)
-  }
-  return id
+  return getBeaconIds().sessionId
 }
 
 const SCREEN_LABELS = {
@@ -84,8 +130,72 @@ export default function D360Panel() {
     }
   }, [currentScreen])
 
-  // Track initial page view
+  // Sync device ID to beacon on profile change
   useEffect(() => {
+    setBeaconDeviceId(profile.deviceId)
+  }, [profile.deviceId])
+
+  // Track initial page view + beacon init
+  useEffect(() => {
+    const { sessionId, deviceId } = getBeaconIds()
+    setBeaconDeviceId(profile.deviceId)
+
+    // Beacon initialization log (mirrors c360a SDK init)
+    console.log(
+      '%c[Beacon] ══════════════════════════════════════',
+      'color: #0984e3;',
+    )
+    console.log(
+      '%c[Beacon] 📊 Data Layer initialized',
+      'color: #0984e3; font-weight: bold;',
+    )
+    console.log(
+      `%c[Beacon] 🔑 Session: %c${sessionId.slice(0, 16)}`,
+      'color: #0984e3;',
+      'color: #a78bfa; font-weight: bold;',
+    )
+    console.log(
+      `%c[Beacon] 📱 Device: %c${profile.deviceId}`,
+      'color: #0984e3;',
+      'color: #60a5fa; font-weight: bold;',
+    )
+    console.log(
+      `%c[Beacon] 👤 Identity: %c${profile.email ? 'KNOWN' : 'ANONYMOUS'}`,
+      'color: #0984e3;',
+      `color: ${profile.email ? '#22c55e' : '#facc15'}; font-weight: bold;`,
+    )
+    console.log(
+      `%c[Beacon] 🛡️  Consent: %c${profile.emailConsent ? 'GRANTED' : 'PENDING'}`,
+      'color: #0984e3;',
+      `color: ${profile.emailConsent ? '#22c55e' : '#facc15'}; font-weight: bold;`,
+    )
+    console.log(
+      '%c[Beacon] 📏 Scroll tracking: %cACTIVE',
+      'color: #0984e3;',
+      'color: #00b894; font-weight: bold;',
+    )
+    console.log(
+      '%c[Beacon] ⏱️  Time tracking: %cACTIVE',
+      'color: #0984e3;',
+      'color: #00b894; font-weight: bold;',
+    )
+    console.log(
+      '%c[Beacon] 🖱️  Click tracking: %cACTIVE',
+      'color: #0984e3;',
+      'color: #00b894; font-weight: bold;',
+    )
+    console.log(
+      '%c[Beacon] ══════════════════════════════════════',
+      'color: #0984e3;',
+    )
+
+    // Attach anonymous identity log (mirrors c360a)
+    console.log(
+      `%c[Beacon] Attaching ${profile.email ? 'known' : 'anonymous'} identity: %c${deviceId.slice(0, 16)}`,
+      'color: #6c5ce7; font-weight: bold;',
+      'color: #a78bfa;',
+    )
+
     pushD360Event(`${SCREEN_LABELS[currentScreen] || currentScreen} View`, 'screenView')
     // Engaged visit after 15s
     const timer = setTimeout(() => pushD360Event('Engaged Visit (15s)', 'engagement'), 15000)
@@ -155,10 +265,16 @@ export default function D360Panel() {
           <Section icon="🔑" title="Identity Resolution">
             <Row label="Session ID" value={<span style={{ color: '#a78bfa', fontWeight: 600 }} title={sessionId.current}>{sessionId.current.slice(0, 8)}…</span>} />
             <Row label="Device ID" value={<span style={{ color: '#60a5fa', fontWeight: 600 }}>{profile.deviceId}</span>} />
-            <Row label="Patient" value={`${profile.firstName} ${profile.lastName}`} />
-            {profile.email && (
-              <Row label="Email" value={<span style={{ color: '#34d399' }}>{profile.email}</span>} />
-            )}
+            <Row label="Patient" value={
+              profile.firstName
+                ? `${profile.firstName} ${profile.lastName}`
+                : <span style={{ color: '#71717a', fontStyle: 'italic' }}>— Not identified</span>
+            } />
+            <Row label="Email" value={
+              profile.email
+                ? <span style={{ color: '#34d399' }}>{profile.email}</span>
+                : <span style={{ color: '#71717a', fontStyle: 'italic' }}>— None</span>
+            } />
             <Row label="Status" value={
               isKnown
                 ? <span className="d360-id-badge known">🟢 KNOWN</span>

@@ -40,7 +40,7 @@ export default function ProgressTracker() {
       {/* Header */}
       <div className="bg-white px-5 pt-2 pb-5">
         <h1 className="text-[26px] font-bold text-gray-900">My Progress</h1>
-        <p className="text-[13px] text-gray-400 mt-0.5">Week {patient.weekOnTherapy} · {patient.name} {patient.lastName}</p>
+        <p className="text-[13px] text-gray-400 mt-0.5">Week {patient.weekOnTherapy}{patient.name ? ` · ${patient.name} ${patient.lastName}` : ''}</p>
       </div>
 
       <div className="px-4 pt-4 space-y-4">

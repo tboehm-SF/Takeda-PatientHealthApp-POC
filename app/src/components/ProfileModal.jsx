@@ -21,7 +21,11 @@ export default function ProfileModal({ onClose }) {
       pushD360Event(`Device ID Changed → ${form.deviceId}`, 'identity')
     }
     if (form.firstName !== profile.firstName || form.lastName !== profile.lastName) {
-      pushD360Event(`Profile Updated → ${form.firstName} ${form.lastName}`, 'identity')
+      if (form.firstName && form.lastName) {
+        pushD360Event(`Name Captured: ${form.firstName} ${form.lastName}`, 'identity')
+      } else if (!form.firstName && !form.lastName && profile.firstName) {
+        pushD360Event('Name Cleared → Anonymous', 'identity')
+      }
     }
 
     // Identity stitching: anonymous → known
@@ -67,7 +71,53 @@ export default function ProfileModal({ onClose }) {
         </div>
 
         <div className="overflow-y-auto px-5 pb-2">
-          <h2 className="text-[20px] font-bold text-gray-900 mt-3 mb-5">Your Profile</h2>
+          <h2 className="text-[20px] font-bold text-gray-900 mt-3 mb-3">Your Profile</h2>
+
+          {/* Anonymous mode toggle */}
+          <div className="flex items-center justify-between mb-5 bg-gray-50 rounded-2xl p-4 border border-gray-100">
+            <div>
+              <p className="text-[13px] font-semibold text-gray-800">Anonymous mode</p>
+              <p className="text-[11px] text-gray-400 mt-0.5">Only device ID &amp; session tracked</p>
+            </div>
+            <button
+              onClick={() => {
+                setForm(f => ({
+                  ...f,
+                  firstName: '',
+                  lastName: '',
+                  email: '',
+                  emailConsent: false,
+                }))
+              }}
+              className={`px-3 py-1.5 rounded-full text-[12px] font-semibold transition-colors ${
+                !form.firstName && !form.lastName && !form.email && !form.emailConsent
+                  ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+              }`}
+            >
+              {!form.firstName && !form.lastName && !form.email && !form.emailConsent
+                ? '🟡 Anonymous'
+                : 'Reset to anonymous'}
+            </button>
+          </div>
+
+          {/* Quick-fill demo identity */}
+          {(!form.firstName || !form.email) && (
+            <button
+              onClick={() => {
+                setForm(f => ({
+                  ...f,
+                  firstName: 'Sarah',
+                  lastName: 'Mitchell',
+                  email: 'sarah.mitchell@example.com',
+                  emailConsent: true,
+                }))
+              }}
+              className="w-full mb-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-primary-dark text-white text-[13px] font-semibold transition-opacity hover:opacity-90 flex items-center justify-center gap-2"
+            >
+              <span>👤</span> Quick-fill: Sarah Mitchell (demo)
+            </button>
+          )}
 
           {/* Device ID */}
           <div className="mb-5">

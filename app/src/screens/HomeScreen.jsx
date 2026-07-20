@@ -26,14 +26,16 @@ export default function HomeScreen() {
           <div>
             <p className="text-[13px] text-gray-400 font-medium">{cetDate}</p>
             <h1 className="text-[26px] font-bold text-gray-900 mt-0.5">
-              Good morning, {patient.name}
+              Good morning{patient.name ? `, ${patient.name}` : ''}
             </h1>
           </div>
           <button
             onClick={() => setProfileOpen(true)}
             className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white font-bold text-[15px] mt-1 active:opacity-80 transition-opacity"
           >
-            {profile.firstName[0]}{profile.lastName[0]}
+            {profile.firstName && profile.lastName
+              ? `${profile.firstName[0]}${profile.lastName[0]}`
+              : <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>}
           </button>
         </div>
 
