@@ -2,8 +2,8 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-  // Base path for GitHub Pages project site (https://<user>.github.io/<repo>/)
-  base: '/Takeda-PatientHealthApp-POC/',
+  // GitHub Pages serves from a repo subpath; Netlify (and dev) serve from root.
+  base: process.env.NETLIFY ? '/' : '/Takeda-PatientHealthApp-POC/',
   plugins: [react()],
   server: {
     port: 5173,
