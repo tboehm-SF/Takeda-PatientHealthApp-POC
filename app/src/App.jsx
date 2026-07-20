@@ -3,6 +3,7 @@ import StatusBar from './components/StatusBar'
 import BottomNav from './components/BottomNav'
 import AgentforceChat from './components/AgentforceChat'
 import ProfileModal from './components/ProfileModal'
+import D360Panel from './components/D360Panel'
 import HomeScreen from './screens/HomeScreen'
 import DailyCheckIn from './screens/DailyCheckIn'
 import EducationHub from './screens/EducationHub'
@@ -60,10 +61,24 @@ function PhoneApp() {
   )
 }
 
+function DemoNote() {
+  return (
+    <div className="demo-note">
+      <span className="demo-note-icon">ℹ️</span>
+      <span>
+        <strong>Demo mode</strong> — Patient consent is auto-granted.
+        Data Cloud tracking events are logged to the browser console.
+      </span>
+    </div>
+  )
+}
+
 export default function App() {
   return (
     <AppProvider>
+      <D360Panel />
       <PhoneApp />
+      <DemoNote />
     </AppProvider>
   )
 }

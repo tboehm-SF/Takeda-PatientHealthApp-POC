@@ -22,8 +22,8 @@ const DEFAULT_PROFILE = {
   firstName: 'Sarah',
   lastName: 'Mitchell',
   age: 34,
-  email: '',
-  emailConsent: false,
+  email: 'sarah.mitchell@example.com',
+  emailConsent: true,
   treatmentStartDate: '2026-06-17', // gives Week 4 from 2026-07-14
 }
 

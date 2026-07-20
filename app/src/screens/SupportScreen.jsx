@@ -2,43 +2,7 @@ import { useState } from 'react'
 import AgentforceChat from '../components/AgentforceChat'
 
 export default function SupportScreen() {
-  const [showFullChat, setShowFullChat] = useState(false)
-
-  if (showFullChat) {
-    return (
-      <div className="flex flex-col h-full bg-white">
-        {/* Chat header */}
-        <div
-          className="px-4 py-4 flex items-center gap-3 flex-shrink-0"
-          style={{ background: 'linear-gradient(135deg, #1a8b91, #2dc8ce)' }}
-        >
-          <button
-            onClick={() => setShowFullChat(false)}
-            className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </button>
-          <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" />
-            </svg>
-          </div>
-          <div>
-            <p className="text-white font-bold text-[15px]">AI Support Assistant</p>
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-green-300" />
-              <p className="text-white/80 text-[11px]">Powered by Agentforce · Always available</p>
-            </div>
-          </div>
-        </div>
-        <div className="flex-1 overflow-hidden">
-          <AgentforceChat isFullScreen onClose={() => setShowFullChat(false)} />
-        </div>
-      </div>
-    )
-  }
+  const [chatExpanded, setChatExpanded] = useState(false)
 
   return (
     <div className="bg-[#f5f8fa] pb-6 screen-enter">
@@ -49,41 +13,77 @@ export default function SupportScreen() {
       </div>
 
       <div className="px-4 pt-4 space-y-4">
-        {/* Agentforce AI chat entry */}
-        <button
-          onClick={() => setShowFullChat(true)}
-          className="w-full text-left"
-        >
-          <div
-            className="rounded-2xl p-4 text-white"
-            style={{ background: 'linear-gradient(135deg, #1a8b91, #2dc8ce)' }}
+        {/* Agentforce AI chat — inline card / expanded chat */}
+        {!chatExpanded ? (
+          <button
+            onClick={() => setChatExpanded(true)}
+            className="w-full text-left"
           >
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+            <div
+              className="rounded-2xl p-4 text-white"
+              style={{ background: 'linear-gradient(135deg, #1a8b91, #2dc8ce)' }}
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-bold text-[16px]">AI Support Assistant</p>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-green-300" />
+                    <p className="text-white/80 text-[12px]">Available 24/7 · Powered by Agentforce</p>
+                  </div>
+                </div>
+              </div>
+              <p className="text-white/80 text-[13px] leading-relaxed">
+                Ask me anything about zasocitinib, managing symptoms, or your treatment journey. I'm here whenever you need support.
+              </p>
+              <div className="mt-3 flex gap-2">
+                {['Missed dose?', 'Side effects', 'How it works'].map((q) => (
+                  <span key={q} className="text-[11px] px-2.5 py-1 rounded-full bg-white/20 font-medium">
+                    {q}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </button>
+        ) : (
+          <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-100 bg-white">
+            {/* Inline chat header with collapse button */}
+            <div
+              className="flex items-center gap-3 px-4 py-3"
+              style={{ background: 'linear-gradient(135deg, #1a8b91, #2dc8ce)' }}
+            >
+              <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
                   <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" />
                 </svg>
               </div>
-              <div>
-                <p className="font-bold text-[16px]">AI Support Assistant</p>
+              <div className="flex-1">
+                <p className="text-white font-bold text-[15px]">AI Support Assistant</p>
                 <div className="flex items-center gap-1.5">
                   <div className="w-2 h-2 rounded-full bg-green-300" />
-                  <p className="text-white/80 text-[12px]">Available 24/7 · Powered by Agentforce</p>
+                  <p className="text-white/80 text-[11px]">Powered by Agentforce · Always available</p>
                 </div>
               </div>
+              <button
+                onClick={() => setChatExpanded(false)}
+                className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+                  <path d="M18 15l-6-6-6 6" />
+                </svg>
+              </button>
             </div>
-            <p className="text-white/80 text-[13px] leading-relaxed">
-              Ask me anything about zasocitinib, managing symptoms, or your treatment journey. I'm here whenever you need support.
-            </p>
-            <div className="mt-3 flex gap-2">
-              {['Missed dose?', 'Side effects', 'How it works'].map((q) => (
-                <span key={q} className="text-[11px] px-2.5 py-1 rounded-full bg-white/20 font-medium">
-                  {q}
-                </span>
-              ))}
+
+            {/* Chat window rendered inline at a fixed height */}
+            <div style={{ height: '400px' }}>
+              <AgentforceChat isInline onClose={() => setChatExpanded(false)} />
             </div>
           </div>
-        </button>
+        )}
 
         {/* Nurse specialist */}
         <div className="card px-4 py-4">
