@@ -1,0 +1,14 @@
+{
+  "name": "zasocitinib-backend",
+  "version": "1.0.0",
+  "description": "Backend for Zasocitinib patient engagement app — handles SF auth and DC Ingestion API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
+}

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pharma Patient Data — Country Comparison</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f0f2f5;
+    color: #1a1d2e;
+    padding: 24px 16px 48px;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  h1 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1b1f3b;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 20px;
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    align-items: center;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #444;
+  }
+  .dot {
+    width: 12px; height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .dot-green  { background: #d4edda; border: 1.5px solid #28a745; }
+  .dot-amber  { background: #fff3cd; border: 1.5px solid #e6a800; }
+  .dot-red    { background: #fde8ec; border: 1.5px solid #e4003a; }
+  .dot-blue   { background: #dbeeff; border: 1.5px solid #005f8e; }
+
+  /* Wrapper */
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    background: white;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 960px;
+  }
+
+  /* Country header row */
+  thead tr.country-row th {
+    padding: 10px 10px 8px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    color: white;
+    border-right: 1px solid rgba(255,255,255,0.2);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  thead tr.country-row th.dim-header {
+    background: #1b1f3b;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: #aabbdd;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    min-width: 160px;
+    width: 160px;
+  }
+  .flag { font-size: 18px; display: block; margin-bottom: 2px; }
+
+  /* Section header rows */
+  tr.section-header td {
+    background: #1b1f3b;
+    color: #aabbdd;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border-top: 2px solid #e4003a;
+  }
+
+  /* Data rows */
+  tr.data-row td {
+    padding: 8px 10px;
+    vertical-align: top;
+    border-right: 1px solid #e8e8ef;
+    border-bottom: 1px solid #eeeeee;
+    font-size: 12px;
+  }
+  tr.data-row:last-child td { border-bottom: none; }
+  tr.data-row td.dim-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #444;
+    background: #fafafa;
+    border-right: 2px solid #dde;
+    width: 160px;
+  }
+
+  /* Verdict row */
+  tr.verdict-row td {
+    padding: 8px 10px;
+    font-weight: 700;
+    font-size: 12px;
+    text-align: center;
+    border-right: 1px solid #e8e8ef;
+  }
+  tr.verdict-row td.dim-label {
+    background: #1b1f3b;
+    color: #aabbdd;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-right: 2px solid #e4003a;
+    text-align: left;
+  }
+
+  /* Cell colour classes */
+  .c-green  { background: #d4edda; color: #155724; }
+  .c-amber  { background: #fff3cd; color: #7a4800; }
+  .c-red    { background: #fde8ec; color: #7a001a; }
+  .c-blue   { background: #dbeeff; color: #003a6e; }
+  .c-plain  { background: white; }
+
+  /* Pill badges */
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+    margin-bottom: 3px;
+  }
+  .pill-green { background: #28a745; color: white; }
+  .pill-amber { background: #e6a800; color: white; }
+  .pill-red   { background: #e4003a; color: white; }
+  .pill-blue  { background: #005f8e; color: white; }
+  .pill-grey  { background: #888;    color: white; }
+
+  /* Sub-text */
+  .note { font-size: 10.5px; color: #666; margin-top: 3px; }
+
+  /* Footer */
+  .footer {
+    margin-top: 18px;
+    font-size: 11px;
+    color: #888;
+    max-width: 960px;
+  }
+  .footer strong { color: #444; }
+
+  /* TTP banner at top */
+  .banner {
+    background: #1b1f3b;
+    color: white;
+    border-radius: 8px;
+    padding: 12px 18px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    line-height: 1.55;
+    max-width: fit-content;
+  }
+  .banner strong { color: #00a1e0; }
+</style>
+</head>
+<body>
+
+<h1>Pharma Patient Data Regulations — Country Comparison</h1>
+<p class="subtitle">Can Takeda store identifiable patient data directly, or is a Trusted Third Party (TTP) required? Seven markets compared.</p>
+
+<div class="banner">
+  <strong>Headline verdict:</strong> No country outright <em>prohibits</em> pharma from holding identifiable patient data — and all seven countries
+  <em>require</em> pharma to hold it for pharmacovigilance.<br>
+  The "pharma can't hold patient data" narrative is <strong>mostly a myth</strong>, strongest in France for a specific data flow.
+  TTPs are <strong>industry risk management</strong>, not universal law.
+</div>
+
+<div class="legend">
+  <span style="font-size:11px;font-weight:600;color:#444;margin-right:4px;">COLOUR KEY:</span>
+  <span class="legend-item"><span class="dot dot-green"></span> Permitted / Low risk</span>
+  <span class="legend-item"><span class="dot dot-amber"></span> Permitted with conditions / Medium risk</span>
+  <span class="legend-item"><span class="dot dot-red"></span> Restricted / High risk or closest to prohibited</span>
+  <span class="legend-item"><span class="dot dot-blue"></span> Neutral / Informational</span>
+</div>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr class="country-row">
+      <th class="dim-header">Dimension</th>
+      <th style="background:#1a4a8a;">
+        <span class="flag">🇺🇸</span>USA
+      </th>
+      <th style="background:#cc0000;">
+        <span class="flag">🇨🇦</span>Canada
+      </th>
+      <th style="background:#003189;">
+        <span class="flag">🇫🇷</span>France
+      </th>
+      <th style="background:#2a2a2a;">
+        <span class="flag">🇩🇪</span>Germany
+      </th>
+      <th style="background:#bc002d;">
+        <span class="flag">🇯🇵</span>Japan
+      </th>
+      <th style="background:#00563f;">
+        <span class="flag">🇦🇺</span>Australia
+      </th>
+      <th style="background:#c8102e;">
+        <span class="flag">🇨🇭</span>Switzerland
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+
+    <!-- SECTION: LEGAL FRAMEWORK -->
+    <tr class="section-header">
+      <td colspan="8">Legal Framework</td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="dim-label">Primary law</td>
+      <td class="c-blue">HIPAA<br><span class="note">+ FDA 21 CFR + state laws (CCPA etc.)</span></td>
+      <td class="c-blue">PIPEDA (federal)<br><span class="note">+ provincial: PHIPA, HIA, PIPA, Quebec Law 25</span></td>
+      <td class="c-blue">GDPR + French LIL<br><span class="note">+ HDS health data hosting rules</span></td>
+      <td class="c-blue">GDPR + BDSG 2018<br><span class="note">+ Sozialgesetzbuch (SGB)</span></td>
+      <td class="c-blue">APPI (amended 2022)<br><span class="note">+ PMD Act (pharma-specific)</span></td>
+      <td class="c-blue">Privacy Act 1988<br><span class="note">+ APPs + 2024 Amendment Act</span></td>
+      <td class="c-blue">nDSG (in force Sep 2023)<br><span class="note">GDPR-aligned but not EU law</span></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="dim-label">Health data classification</td>
+      <td class="c-amber">PHI (Protected Health Info)<br><span class="note">Only if held by a covered entity</span></td>
+      <td class="c-amber">Sensitive personal information<br><span class="note">Higher protection under provincial health privacy laws</span></td>
+      <td class="c-red">Special category data<br><span class="note">Strictest EU/French interpretation</span></td>
+      <td class="c-red">Special category data<br><span class="note">GDPR Art. 9 + heightened BDSG scrutiny</span></td>
+      <td class="c-amber">Sensitive personal information<br><span class="note">要配慮個人情報 — explicit consent required</span></td>
+      <td class="c-amber">Sensitive information<br><span class="note">Requires consent under APPs</span></td>
+      <td class="c-amber">Particularly sensitive personal data<br><span class="note">nDSG Art. 5(c)</span></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="dim-label">Is pharma a "covered entity" under primary law?</td>
+      <td class="c-green"><span class="pill pill-green">NO</span><br><span class="note">HIPAA does not apply to pharma PSPs unless receiving PHI from a covered entity</span></td>
+      <td class="c-green"><span class="pill pill-green">NO</span><br><span class="note">Not a "health information custodian" under provincial health privacy laws</span></td>
+      <td class="c-amber"><span class="pill pill-amber">PARTIAL</span><br><span class="note">GDPR applies to all data controllers in EU; pharma is a controller when processing patient data</span></td>
+      <td class="c-amber"><span class="pill pill-amber">YES</span><br><span class="note">GDPR + BDSG apply to pharma as data controller</span></td>
+      <td class="c-amber"><span class="pill pill-amber">PARTIAL</span><br><span class="note">APPI applies; pharma not a "medical institution" but handles sensitive data</span></td>
+      <td class="c-amber"><span class="pill pill-amber">YES</span><br><span class="note">Privacy Act applies to pharma companies with >AUD $3M turnover</span></td>
+      <td class="c-amber"><span class="pill pill-amber">YES</span><br><span class="note">nDSG applies to all Swiss private-sector data controllers</span></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="dim-label">Supervisory authority</td>
+      <td class="c-blue">HHS / OCR (HIPAA)<br>FTC + State AGs</td>
+      <td class="c-blue">OPC (federal)<br>+ Provincial privacy commissioners</td>
+      <td class="c-blue">CNIL</td>
+      <td class="c-blue">BfDI (federal) + 16 state DPAs</td>
+      <td class="c-blue">PPC (Personal Information Protection Commission)</td>
+      <td class="c-blue">OAIC (Office of the Australian Information Commissioner)</td>
+      <td class="c-blue">FDPIC</td>
+    </tr>
+
+    <!-- SECTION: STORING PATIENT DATA -->
+    <tr class="section-header">
+      <td colspan="8">Pharma Storing Identifiable Patient Data</td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="dim-label">Legal basis pharma can use</td>
+      <td class="c-green">Patient consent<br><span class="note">HIPAA doesn't restrict non-covered entities; state law consent rules apply</span></td>
+      <td class="c-green">Explicit consent<br><span class="note">PIPEDA + provincial health privacy consent; Quebec Law 25 adds PIAs</span></td>
+      <td class="c-amber">Explicit consent<br><span class="note">GDPR Art. 9(2)(a); must be freely given, specific, informed. Legitimate interest not available for health data.</span></td>
+      <td class="c-amber">Explicit consent<br><span class="note">GDPR Art. 9(2)(a) + BDSG §22; DPAs scrutinise whether consent is truly "freely given" in commercial context</span></td>
+      <td class="c-amber">Explicit consent<br><span class="note">APPI Art. 17(2) for sensitive data; consent required for both collection and 3rd-party provision</span></td>
+      <td class="c-green">Consent<br><span class="note">APP 3 (collection), APP 6 (secondary use); consent must be voluntary and informed</span></td>
+      <td class="c-amber">Consent or other lawful basis<br><span class="note">nDSG Art. 6; consent or overriding private interest; mirrors GDPR standard</span></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="dim-label">Can pharma hold identifiable PSP data directly?</td>
+      <td class="c-green"><span class="pill pill-green">YES</span><br><span class="note">With patient consent; straightforward</span></td>
+      <td class="c-green"><span class="pill pill-green">YES</span><br><span class="note">With consent; Quebec Law 25 raises bar but doesn't prohibit</span></td>
+      <td class="c-amber"><span class="pill pill-amber">YES — conditions apply</span><br><span class="note">Direct patient consent: yes. HCP-transmitted data: TTP strongly preferred. HDS hosting mandatory.</span></td>
+      <td class="c-amber"><span class="pill pill-amber">YES — with robust consent</span><br><span class="note">Legally permitted but DPA scrutiny is high; data minimisation expected</span></td>
+      <td class="c-green"><span class="pill pill-green">YES</span><br><span class="note">With explicit consent; cultural caution goes beyond legal requirement</span></td>
+      <td class="c-green"><span class="pill pill-green">YES</span><br><span class="note">With APP-compliant consent; Privacy Act reform may tighten this</span></td>
+      <td class="c-green"><span class="pill pill-green">YES</span><br><span class="note">With consent; GDPR-equivalent standards apply in practice</span></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="dim-label">HCP → Pharma data flow (e.g. PSP referral)</td>
+      <td class="c-green">Permitted with patient consent<br><span class="note">Business associate agreement needed if HCP is a covered entity</span></td>
+      <td class="c-amber">Permitted with consent<br><span class="note">Provincial laws (PHIPA etc.) govern HCP disclosure obligations</span></td>
+      <td class="c-red">Most restricted<br><span class="note">HCP bound by <em>secret médical</em>; CNIL endorsed TTP model for this flow; direct HCP→Pharma transmission legally problematic</span></td>
+      <td class="c-amber">Possible but complex<br><span class="note">HCP has professional secrecy obligations; patient must explicitly release; DPA scrutiny high</span></td>
+      <td class="c-amber">Possible with patient consent<br><span class="note">Cultural norms make HCPs cautious about direct referral to pharma</span></td>
+      <td class="c-green">Permitted with consent<br><span class="note">HCP can refer under APPs if patient consents</span></td>
+      <td class="c-amber">Possible with consent<br><span class="note">nDSG + professional secrecy obligations; GDPR applies to EU-resident patients</span></td>
+    </tr>
+
+    <!-- SECTION: TTP -->
+    <tr class="section-header">
+      <td colspan="8">Trusted Third Party (TTP) Requirements</td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="dim-label">TTP legally required?</td>
+      <td class="c-green"><span class="pill pill-green">NO</span><br><span class="note">Industry practice only; no regulatory mandate</span></td>
+      <td class="c-green"><span class="pill pill-green">NO</span><br><span class="note">Industry practice only</span></td>
+      <td class="c-red"><span class="pill pill-red">CLOSEST TO YES</span><br><span class="note">CNIL <em>tiers de confiance</em> guidance strongly endorsed for HCP→Pharma PSP flows; not a statute but near-mandatory in practice</span></td>
+      <td class="c-amber"><span class="pill pill-amber">NO — but risk-driven</span><br><span class="note">Not legally required; widely used as DPA risk management</span></td>
+      <td class="c-amber"><span class="pill pill-amber">NO — but cultural norm</span><br><span class="note">JPMA guidance + cultural conservatism drive TTP-like architectures</span></td>
+      <td class="c-green"><span class="pill pill-green">NO</span><br><span class="note">Not required; may reconsider pending Privacy Act reform</span></td>
+      <td class="c-green"><span class="pill pill-green">NO</span><br><span class="note">Not required; GDPR-equivalent caution applies for EU programmes</span></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="dim-label">Why TTP model is used (where it is)</td>
+      <td class="c-blue">Risk management; simplifies HIPAA BAA complexity when HCPs involved</td>
+      <td class="c-blue">Risk management; simplifies provincial health privacy compliance</td>
+      <td class="c-blue">CNIL guidance; <em>secret médical</em> barrier; protects HCP from liability; HDS hosting requirement</td>
+      <td class="c-blue">DPA risk reduction; data minimisation principle; professional secrecy of HCPs</td>
+      <td class="c-blue">Cultural norm; JPMA guidance; physician reluctance to share patient data with pharma directly</td>
+      <td class="c-blue">Not commonly used; direct consent model preferred</td>
+      <td class="c-blue">Used in EU-aligned programmes; not domestically mandated</td>
+    </tr>
+
+    <!-- SECTION: SPECIAL REQUIREMENTS -->
+    <tr class="section-header">
+      <td colspan="8">Country-Specific Requirements &amp; Notable Differences</td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="dim-label">Special infrastructure / hosting requirements</td>
+      <td class="c-green">None pharma-specific<br><span class="note">HIPAA Security Rule applies if BAA in place</span></td>
+      <td class="c-amber">Quebec: data residency rules<br><span class="note">Quebec Law 25 requires risk assessments before cross-border transfers</span></td>
+      <td class="c-red">HDS certification mandatory<br><span class="note">Any entity storing French health data must use HDS-certified hosting (French regulatory requirement unique to France)</span></td>
+      <td class="c-amber">GDPR data residency considerations<br><span class="note">No French-equivalent certification, but DPAs monitor cloud hosting carefully</span></td>
+      <td class="c-amber">Act on Medical Practice data<br><span class="note">Clinical data must remain in Japan in some contexts; PMDA oversight</span></td>
+      <td class="c-green">No specific hosting certification<br><span class="note">APP 8 governs cross-border disclosure</span></td>
+      <td class="c-amber">GDPR adequacy applies<br><span class="note">EU-resident data may require EU-hosted infrastructure; Swissmedic oversight</span></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="dim-label">Pharmacovigilance: must pharma hold patient data?</td>
+      <td class="c-blue"><span class="pill pill-blue">REQUIRED</span><br><span class="note">FDA 21 CFR Part 314 / ICH E2 — ICSRs must be filed and retained</span></td>
+      <td class="c-blue"><span class="pill pill-blue">REQUIRED</span><br><span class="note">Health Canada / Food and Drugs Act mandatory adverse event reporting</span></td>
+      <td class="c-blue"><span class="pill pill-blue">REQUIRED</span><br><span class="note">EMA / EU GVP Guidelines — ICSRs required; overrides privacy restrictions</span></td>
+      <td class="c-blue"><span class="pill pill-blue">REQUIRED</span><br><span class="note">EMA / EU GVP; BDSG §27 research exception also applies</span></td>
+      <td class="c-blue"><span class="pill pill-blue">REQUIRED</span><br><span class="note">PMDA / PMD Act — adverse event reports must be filed</span></td>
+      <td class="c-blue"><span class="pill pill-blue">REQUIRED</span><br><span class="note">TGA / Therapeutic Goods Act — mandatory safety reporting</span></td>
+      <td class="c-blue"><span class="pill pill-blue">REQUIRED</span><br><span class="note">Swissmedic / Therapeutic Products Act — mandatory reporting</span></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="dim-label">Notable recent changes / watch points</td>
+      <td class="c-amber">State law patchwork growing<br><span class="note">CCPA (CA), MHMD Act (WA), Nevada consumer health data law — increasingly restricting health data use outside HIPAA</span></td>
+      <td class="c-amber">Quebec Law 25 (2023)<br><span class="note">Strictest Canadian law now in force; privacy impact assessments mandatory</span></td>
+      <td class="c-amber">CNIL enforcement active<br><span class="note">Regular PSP guidance updates; HDS v2 certification requirements tightened</span></td>
+      <td class="c-amber">DPA enforcement rising<br><span class="note">German state DPAs increasingly active on pharma; consent validity challenged</span></td>
+      <td class="c-amber">APPI 2022 amendments<br><span class="note">Extraterritorial reach added; pseudonymised data rules tightened; leaning stricter</span></td>
+      <td class="c-red">Privacy Act reform ongoing<br><span class="note">Significant tightening expected; statutory privacy tort introduced; watch 2025–26</span></td>
+      <td class="c-amber">nDSG in force Sep 2023<br><span class="note">First major Swiss data law update in decades; GDPR alignment but Swiss-specific nuances</span></td>
+    </tr>
+
+    <!-- VERDICT ROW -->
+    <tr class="verdict-row">
+      <td class="dim-label">Overall TTP verdict</td>
+      <td class="c-green">MYTH<br><span style="font-size:10px;font-weight:400;">Direct consent model works; TTP = risk choice</span></td>
+      <td class="c-green">MYTH<br><span style="font-size:10px;font-weight:400;">Direct consent model works; Quebec adds requirements</span></td>
+      <td class="c-red">CLOSEST TO REAL<br><span style="font-size:10px;font-weight:400;">TTP near-mandatory for HCP→Pharma flows; HDS hosting required</span></td>
+      <td class="c-amber">MOSTLY MYTH<br><span style="font-size:10px;font-weight:400;">Legally permitted; high DPA scrutiny makes TTP prudent</span></td>
+      <td class="c-amber">MOSTLY MYTH<br><span style="font-size:10px;font-weight:400;">Legally permitted; cultural norms drive TTP use in practice</span></td>
+      <td class="c-green">MYTH<br><span style="font-size:10px;font-weight:400;">Direct consent model works; reform may tighten</span></td>
+      <td class="c-green">MYTH<br><span style="font-size:10px;font-weight:400;">Direct consent works; GDPR standards apply for EU programmes</span></td>
+    </tr>
+
+  </tbody>
+</table>
+</div>
+
+<p class="footer">
+  <strong>Key takeaway for Takeda:</strong> Architecture designed for France's requirements (TTP for HCP-referred enrolments + HDS-certified hosting) will largely satisfy all other markets in scope.
+  Germany requires the most robust consent design. Japan requires cultural sensitivity beyond what the law alone demands.
+  The pharmacovigilance exception is universal — all seven regulators legally require pharma to hold identifiable patient safety data, which is the single strongest counter-argument to the "pharma can't hold patient data" narrative.<br><br>
+  <em>Sources: HIPAA (Wikipedia), GDPR (Wikipedia), PIPEDA (Wikipedia), Privacy Act 1988 (Wikipedia), Pharmacovigilance (Wikipedia), training knowledge for APPI/nDSG/CNIL guidance/BDSG/JPMA.
+  This is informational only and does not constitute legal advice — validate with qualified counsel before operational use.</em>
+</p>
+
+</body>
+</html>

@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Zasocitinib App · Salesforce Data Model</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #f1f5f9;
+      padding: 32px;
+      color: #0f172a;
+      min-width: 1100px;
+    }
+
+    /* ── Header ── */
+    .page-header { margin-bottom: 24px; }
+    .page-header h1 { font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 6px; }
+    .page-header p  { font-size: 13px; color: #64748b; line-height: 1.6; }
+
+    /* ── Legend ── */
+    .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+    .legend-item {
+      display: flex; align-items: center; gap: 8px;
+      background: white; padding: 7px 14px;
+      border-radius: 8px; font-size: 12px; font-weight: 600;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      color: #334155;
+    }
+    .legend-swatch { width: 13px; height: 13px; border-radius: 3px; flex-shrink: 0; }
+    .legend-divider { width: 1px; height: 28px; background: #e2e8f0; margin: 0 4px; }
+    .legend-shape {
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+      padding: 2px 8px; border-radius: 4px;
+      background: #f1f5f9; border: 1.5px solid #cbd5e1;
+      color: #64748b;
+    }
+
+    /* ── Diagram card ── */
+    .diagram-card {
+      background: white; border-radius: 16px;
+      padding: 32px; margin-bottom: 24px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      overflow-x: auto;
+    }
+    .mermaid { min-width: 1060px; }
+
+    /* ── Reference table ── */
+    .ref-card {
+      background: white; border-radius: 16px;
+      padding: 28px 32px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+    }
+    .ref-card h2 { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: #0f172a; }
+    table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    thead th {
+      text-align: left; padding: 9px 12px;
+      background: #f8fafc; color: #64748b;
+      font-size: 10.5px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      border-bottom: 1.5px solid #e2e8f0;
+    }
+    tbody td {
+      padding: 9px 12px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155; vertical-align: top; line-height: 1.5;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: #fafafa; }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-block; padding: 2px 9px;
+      border-radius: 20px; font-size: 11px; font-weight: 600;
+      white-space: nowrap;
+    }
+    .b-hc  { background: #dbeafe; color: #1d4ed8; }
+    .b-dc  { background: #ede9fe; color: #6d28d9; }
+    .b-mc  { background: #d1fae5; color: #047857; }
+    .b-af  { background: #fef3c7; color: #b45309; }
+    .b-type { background: #f1f5f9; color: #475569; }
+
+    td strong { font-weight: 600; color: #0f172a; }
+    td code {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 11px; background: #f1f5f9;
+      padding: 1px 5px; border-radius: 4px; color: #475569;
+    }
+
+    /* ── Footer note ── */
+    .footnote { margin-top: 16px; font-size: 11.5px; color: #94a3b8; line-height: 1.7; }
+    .footnote strong { color: #64748b; }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <h1>Zasocitinib Companion App · Salesforce Data Model</h1>
+    <p>Object residency across Salesforce Core / Health Cloud, Data Cloud, MC Next on Core, and Agentforce.<br/>
+       Arrows show data flow direction. Cross-system arrows represent key integration touchpoints.</p>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background:#0f172a;"></div>Mobile App (patient)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#2563eb;"></div>Salesforce Core / Health Cloud</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#7c3aed;"></div>Data Cloud</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#059669;"></div>MC Next on Core</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#d97706;"></div>Agentforce</div>
+    <div class="legend-divider"></div>
+    <div class="legend-item"><span class="legend-shape" style="border-radius:20px;">( )</span>&nbsp;Key anchor object</div>
+    <div class="legend-item"><span class="legend-shape">[ ]</span>&nbsp;Standard / Custom object</div>
+    <div class="legend-item"><span class="legend-shape">{{ }}</span>&nbsp;Calculated Insight</div>
+    <div class="legend-item"><span class="legend-shape">[ ( ) ]</span>&nbsp;Segment / data store</div>
+    <div class="legend-item"><span class="legend-shape">[[ ]]</span>&nbsp;Agentforce Agent</div>
+    <div class="legend-item"><span class="legend-shape">[/ /]</span>&nbsp;Rule / Action</div>
+  </div>
+
+  <!-- Mermaid diagram -->
+  <div class="diagram-card">
+    <div class="mermaid">
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'fontSize': '13px',
+    'lineColor': '#94a3b8',
+    'edgeLabelBackground': '#ffffff',
+    'clusterBkg': '#f8fafc',
+    'clusterBorder': '#e2e8f0'
+  },
+  'flowchart': { 'curve': 'basis', 'padding': 20, 'nodeSpacing': 40, 'rankSpacing': 60 }
+}}%%
+flowchart LR
+
+    subgraph APP["  📱  MOBILE APP · PATIENT  "]
+        direction TB
+        ANRS(["NRS Check-in\n0–10 slider"])
+        APSO(["PsOdisk\nAssessment"])
+        ADOS(["Dose\nConfirmation"])
+        ACHAT(["Agentforce\nChat"])
+        AVIEW(["Education Hub\nContent View"])
+    end
+
+    subgraph HC["  🏥  SALESFORCE CORE · HEALTH CLOUD  "]
+        direction TB
+        CON(["Contact"])
+        ENR["CareProgram\nEnrollment"]
+        TRT["Treatment\nRecord __c"]
+        NRS["NRS Score __c"]
+        PSO["PsOdisk\nAssessment __c"]
+        PSD["PsOdisk Domain\nScore __c"]
+        DOS["Dose\nConfirmation __c"]
+        DLQ["DLQI\nAssessment __c"]
+        MIL["Milestone __c"]
+        REF["Refill\nRequest __c"]
+        NAL["Navigator\nAlert __c"]
+
+        CON --> ENR
+        CON --> TRT
+        CON --> NRS
+        CON --> PSO
+        PSO --> PSD
+        CON --> DOS
+        CON --> DLQ
+        CON --> MIL
+        CON --> REF
+        CON --> NAL
+    end
+
+    subgraph DC["  ☁️  DATA CLOUD  "]
+        direction TB
+        UNI(["Unified\nIndividual"])
+        NRSDMO["NRS Score\nStream DMO"]
+        PSODMO["Assessment\nStream DMO"]
+        ADHDMO["Adherence\nStream DMO"]
+        NRSCI{{"NRS Trend\nCalc. Insight"}}
+        ENGCI{{"Engagement\nScore CI"}}
+        SEG1[("High NRS\nSegment")]
+        SEG2[("At-Risk\nSegment")]
+
+        UNI --> NRSDMO
+        UNI --> PSODMO
+        UNI --> ADHDMO
+        NRSDMO --> NRSCI
+        PSODMO --> ENGCI
+        ADHDMO --> ENGCI
+        NRSCI --> SEG1
+        ENGCI --> SEG2
+    end
+
+    subgraph MCN["  📬  MC NEXT ON CORE  "]
+        direction TB
+        CONT["Content Item"]
+        PRULE[/"Personalisation\nRule"/]
+        CREC["Content\nRecommendation"]
+
+        PRULE --> CREC
+        CREC -.-> CONT
+    end
+
+    subgraph AF["  🤖  AGENTFORCE  "]
+        direction TB
+        PSAG[["Patient Support\nAgent"]]
+        NVAG[["Navigator\nAgent"]]
+        OUTR[/"Proactive\nOutreach Action"/]
+
+        NVAG --> OUTR
+    end
+
+    ANRS      -- "POST /checkin\n(REST API)"       --> NRS
+    APSO      -- "POST /checkin\n(REST API)"       --> PSO
+    ADOS      -- "POST /dose\n(REST API)"          --> DOS
+    ACHAT     -- "Agentforce API"                  --> PSAG
+    CON       -- "identity resolution"             --> UNI
+    NRS       -- "streaming connector"             --> NRSDMO
+    PSO       -- "streaming connector"             --> PSODMO
+    DOS       -- "streaming connector"             --> ADHDMO
+    SEG1      -- "triggers personalisation"        --> PRULE
+    SEG2      -- "creates alert"                   --> NAL
+    CREC      -- "ranked content JSON"             --> AVIEW
+    NAL       -- "navigator queue"                 --> NVAG
+    OUTR      -- "SMS / push / email"              --> ANRS
+
+    classDef app fill:#f1f5f9,stroke:#0f172a,color:#0f172a,font-weight:600
+    classDef hc  fill:#dbeafe,stroke:#2563eb,color:#1e3a8a,font-weight:600
+    classDef dc  fill:#ede9fe,stroke:#7c3aed,color:#3b0764,font-weight:600
+    classDef mc  fill:#d1fae5,stroke:#059669,color:#064e3b,font-weight:600
+    classDef af  fill:#fef3c7,stroke:#d97706,color:#78350f,font-weight:600
+
+    class ANRS,APSO,ADOS,ACHAT,AVIEW app
+    class CON,ENR,TRT,NRS,PSO,PSD,DOS,DLQ,MIL,REF,NAL hc
+    class UNI,NRSDMO,PSODMO,ADHDMO,NRSCI,ENGCI,SEG1,SEG2 dc
+    class CONT,PRULE,CREC mc
+    class PSAG,NVAG,OUTR af
+    </div>
+  </div>
+
+  <!-- Object reference table -->
+  <div class="ref-card">
+    <h2>Object Reference</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:200px;">Object</th>
+          <th style="width:160px;">System</th>
+          <th style="width:130px;">Type</th>
+          <th style="width:280px;">Key Fields</th>
+          <th>Purpose</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- ── Mobile App ── -->
+        <tr>
+          <td><strong>NRS Check-in</strong></td>
+          <td><span class="badge" style="background:#e2e8f0;color:#0f172a;">Mobile App</span></td>
+          <td><span class="badge b-type">Patient Input</span></td>
+          <td><code>score</code> (0–10) <code>patientId</code> <code>submittedAt</code></td>
+          <td>Patient moves the 0–10 slider and taps "Save NRS score". App POSTs to <code>/api/checkin</code> on the Node/Heroku backend, which writes NRS Score __c to Health Cloud via OAuth JWT bearer flow.</td>
+        </tr>
+        <tr>
+          <td><strong>PsOdisk Assessment</strong></td>
+          <td><span class="badge" style="background:#e2e8f0;color:#0f172a;">Mobile App</span></td>
+          <td><span class="badge b-type">Patient Input</span></td>
+          <td><code>domains[10]</code> (0–10 each) <code>patientId</code> <code>submittedAt</code></td>
+          <td>Patient completes 10-domain flow. Same POST to <code>/api/checkin</code> — backend writes PsOdisk Assessment __c + 10 child PsOdisk Domain Score __c records in a single transaction.</td>
+        </tr>
+        <tr>
+          <td><strong>Dose Confirmation</strong></td>
+          <td><span class="badge" style="background:#e2e8f0;color:#0f172a;">Mobile App</span></td>
+          <td><span class="badge b-type">Patient Input</span></td>
+          <td><code>confirmed</code> (bool) <code>patientId</code> <code>confirmedAt</code></td>
+          <td>Patient taps "I took my dose" on the Home screen. App POSTs to <code>/api/dose</code> → Dose Confirmation __c written to Health Cloud. Missed confirmations tracked automatically after daily cutoff.</td>
+        </tr>
+        <tr>
+          <td><strong>Agentforce Chat</strong></td>
+          <td><span class="badge" style="background:#e2e8f0;color:#0f172a;">Mobile App</span></td>
+          <td><span class="badge b-type">Patient Input</span></td>
+          <td><code>message</code> <code>sessionId</code> <code>patientId</code></td>
+          <td>Floating chat bubble on every screen. Calls Agentforce API directly from the backend proxy — backend holds credentials, app never touches SF auth tokens.</td>
+        </tr>
+        <tr>
+          <td><strong>Education Hub View</strong></td>
+          <td><span class="badge" style="background:#e2e8f0;color:#0f172a;">Mobile App</span></td>
+          <td><span class="badge b-type">App UI</span></td>
+          <td><code>rankedContentIds[]</code> (received) <code>contentItems[]</code> (rendered)</td>
+          <td>After check-in POST returns, the backend appends the ranked content JSON from MC Next. The Education Hub re-renders with the personalised card order. In demo mode the local <code>personalise()</code> function in <code>contentLibrary.js</code> fills this role.</td>
+        </tr>
+
+        <!-- ── Health Cloud ── -->
+        <tr>
+          <td><strong>Contact</strong></td>
+          <td><span class="badge b-hc">Health Cloud</span></td>
+          <td><span class="badge b-type">Standard</span></td>
+          <td><code>Id</code> <code>Name</code> <code>DOB</code></td>
+          <td>Core patient identity record. Anchor for all clinical and engagement data.</td>
+        </tr>
+        <tr>
+          <td><strong>CareProgram Enrollment</strong></td>
+          <td><span class="badge b-hc">Health Cloud</span></td>
+          <td><span class="badge b-type">HC Standard</span></td>
+          <td><code>Contact__c</code> <code>CareProgram</code> <code>StartDate</code> <code>Status</code></td>
+          <td>Links the patient to the zasocitinib programme. Controls which content is eligible.</td>
+        </tr>
+        <tr>
+          <td><strong>Treatment Record __c</strong></td>
+          <td><span class="badge b-hc">Health Cloud</span></td>
+          <td><span class="badge b-type">Custom</span></td>
+          <td><code>Contact__c</code> <code>Drug__c</code> <code>DoseStrength__c</code> <code>StartDate__c</code> <code>TargetWeeks__c</code></td>
+          <td>Prescription details for zasocitinib 15mg once daily. Source of truth for dose schedule.</td>
+        </tr>
+        <tr>
+          <td><strong>NRS Score __c</strong></td>
+          <td><span class="badge b-hc">Health Cloud</span></td>
+          <td><span class="badge b-type">Custom</span></td>
+          <td><code>Contact__c</code> <code>Score__c</code> (0–10) <code>SubmittedAt__c</code></td>
+          <td>Daily patient-reported itch score. Primary personalisation trigger. Streams to Data Cloud on write.</td>
+        </tr>
+        <tr>
+          <td><strong>PsOdisk Assessment __c</strong></td>
+          <td><span class="badge b-hc">Health Cloud</span></td>
+          <td><span class="badge b-type">Custom</span></td>
+          <td><code>Contact__c</code> <code>AssessmentDate__c</code> <code>OverallScore__c</code></td>
+          <td>Container record for the 10-domain daily assessment. Parent of Domain Score records.</td>
+        </tr>
+        <tr>
+          <td><strong>PsOdisk Domain Score __c</strong></td>
+          <td><span class="badge b-hc">Health Cloud</span></td>
+          <td><span class="badge b-type">Custom</span></td>
+          <td><code>Assessment__c</code> <code>Domain__c</code> (picklist) <code>Score__c</code> (0–10)</td>
+          <td>One child record per domain per assessment (10 per session). Domain picklist: itch, pain, sleep, emotional, body, social, work, etc.</td>
+        </tr>
+        <tr>
+          <td><strong>Dose Confirmation __c</strong></td>
+          <td><span class="badge b-hc">Health Cloud</span></td>
+          <td><span class="badge b-type">Custom</span></td>
+          <td><code>Contact__c</code> <code>ConfirmedAt__c</code> <code>Missed__c</code></td>
+          <td>Daily dose tracking. Feeds adherence stream in Data Cloud. Triggers At-Risk alert on 2+ missed.</td>
+        </tr>
+        <tr>
+          <td><strong>DLQI Assessment __c</strong></td>
+          <td><span class="badge b-hc">Health Cloud</span></td>
+          <td><span class="badge b-type">Custom</span></td>
+          <td><code>Contact__c</code> <code>Score__c</code> (0–30) <code>AssessmentDate__c</code></td>
+          <td>Dermatology Life Quality Index. Completed by patient every 4–6 weeks. Tracked on Progress screen.</td>
+        </tr>
+        <tr>
+          <td><strong>Milestone __c</strong></td>
+          <td><span class="badge b-hc">Health Cloud</span></td>
+          <td><span class="badge b-type">Custom</span></td>
+          <td><code>Contact__c</code> <code>MilestoneType__c</code> <code>EarnedDate__c</code></td>
+          <td>Achievement badges: 21-day streak, DLQI improvement, PASI 75 at Week 12. Shown on Progress screen.</td>
+        </tr>
+        <tr>
+          <td><strong>Refill Request __c</strong></td>
+          <td><span class="badge b-hc">Health Cloud</span></td>
+          <td><span class="badge b-type">Custom</span></td>
+          <td><code>Contact__c</code> <code>DaysRemaining__c</code> <code>RequestedAt__c</code> <code>Status__c</code></td>
+          <td>Medication refill workflow. Support screen shows alert when &lt;14 days remaining.</td>
+        </tr>
+        <tr>
+          <td><strong>Navigator Alert __c</strong></td>
+          <td><span class="badge b-hc">Health Cloud</span></td>
+          <td><span class="badge b-type">Custom</span></td>
+          <td><code>Contact__c</code> <code>AlertType__c</code> <code>Severity__c</code> <code>Status__c</code> <code>AgentSuggestion__c</code></td>
+          <td>Patient Navigator command centre queue. Created by Data Cloud At-Risk segment. Navigator reviews → one-click approve → Agentforce executes outreach.</td>
+        </tr>
+
+        <!-- ── Data Cloud ── -->
+        <tr>
+          <td><strong>Unified Individual</strong></td>
+          <td><span class="badge b-dc">Data Cloud</span></td>
+          <td><span class="badge b-type">DMO · Standard</span></td>
+          <td><code>UnifiedRecordId</code> <code>ContactPointEmail</code> <code>SourceObjectId</code></td>
+          <td>Identity-resolved patient across all Health Cloud sources. Anchor for all Data Cloud processing.</td>
+        </tr>
+        <tr>
+          <td><strong>NRS Score Stream DMO</strong></td>
+          <td><span class="badge b-dc">Data Cloud</span></td>
+          <td><span class="badge b-type">DMO · Custom</span></td>
+          <td><code>IndividualId</code> <code>Score</code> <code>SubmittedAt</code> <code>WeekOnTherapy</code></td>
+          <td>Ingested from NRS Score __c via HC streaming connector. Source for NRS Trend Calculated Insight.</td>
+        </tr>
+        <tr>
+          <td><strong>Assessment Stream DMO</strong></td>
+          <td><span class="badge b-dc">Data Cloud</span></td>
+          <td><span class="badge b-type">DMO · Custom</span></td>
+          <td><code>IndividualId</code> <code>Domain</code> <code>DomainScore</code> <code>AssessmentDate</code></td>
+          <td>Ingested from PsOdisk Domain Score __c. Source for Engagement Score CI (especially emotional domain).</td>
+        </tr>
+        <tr>
+          <td><strong>Adherence Stream DMO</strong></td>
+          <td><span class="badge b-dc">Data Cloud</span></td>
+          <td><span class="badge b-type">DMO · Custom</span></td>
+          <td><code>IndividualId</code> <code>ConfirmedAt</code> <code>Missed</code> <code>ConsecutiveMissed</code></td>
+          <td>Ingested from Dose Confirmation __c. Feeds both Engagement Score CI and adherence rate calculation.</td>
+        </tr>
+        <tr>
+          <td><strong>NRS Trend (Calc. Insight)</strong></td>
+          <td><span class="badge b-dc">Data Cloud</span></td>
+          <td><span class="badge b-type">Calculated Insight</span></td>
+          <td><code>IndividualId</code> <code>AvgNRS_3d</code> <code>AvgNRS_7d</code> <code>TrendDirection</code></td>
+          <td>Rolling 3-day and 7-day NRS averages. Qualifies patients into High NRS Segment when AvgNRS_3d ≥ 7.</td>
+        </tr>
+        <tr>
+          <td><strong>Engagement Score (Calc. Insight)</strong></td>
+          <td><span class="badge b-dc">Data Cloud</span></td>
+          <td><span class="badge b-type">Calculated Insight</span></td>
+          <td><code>IndividualId</code> <code>AdherenceRate</code> <code>MissedDoses_7d</code> <code>EmotionalScore</code> <code>RiskScore</code></td>
+          <td>Multi-signal engagement score. Combines dose adherence, NRS trend, and PsOdisk emotional domain. Qualifies At-Risk Segment.</td>
+        </tr>
+        <tr>
+          <td><strong>High NRS Segment</strong></td>
+          <td><span class="badge b-dc">Data Cloud</span></td>
+          <td><span class="badge b-type">Segment</span></td>
+          <td>Rule: <code>AvgNRS_3d ≥ 7</code></td>
+          <td>Triggers itch management content personalisation via MC Next Personalisation Rule. Real-time evaluation after every NRS submission.</td>
+        </tr>
+        <tr>
+          <td><strong>At-Risk Segment</strong></td>
+          <td><span class="badge b-dc">Data Cloud</span></td>
+          <td><span class="badge b-type">Segment</span></td>
+          <td>Rule: <code>MissedDoses_7d ≥ 2</code> OR <code>NRS trend up 5d</code> OR <code>EmotionalScore &lt; 3</code> OR <code>7d no app activity</code></td>
+          <td>Triggers creation of Navigator Alert __c in Health Cloud. Routes to Patient Navigator command centre + Agentforce proactive outreach queue.</td>
+        </tr>
+
+        <!-- ── MC Next ── -->
+        <tr>
+          <td><strong>Content Item</strong></td>
+          <td><span class="badge b-mc">MC Next on Core</span></td>
+          <td><span class="badge b-type">MC Object</span></td>
+          <td><code>ContentId</code> <code>Title</code> <code>Category</code> <code>Tag</code> <code>ReadTime</code> <code>TriggerConditions</code></td>
+          <td>Educational articles, guides, and resources. 15 items in demo library. Each has trigger conditions metadata for personalisation rule matching.</td>
+        </tr>
+        <tr>
+          <td><strong>Personalisation Rule</strong></td>
+          <td><span class="badge b-mc">MC Next on Core</span></td>
+          <td><span class="badge b-type">MC Object</span></td>
+          <td><code>SegmentId</code> <code>ContentIds[]</code> <code>Priority</code> <code>Context</code></td>
+          <td>Maps Data Cloud segments to ranked content items. Activated when HC receives a segment membership event. Mirrors the local <code>personalise()</code> function in the current demo.</td>
+        </tr>
+        <tr>
+          <td><strong>Content Recommendation</strong></td>
+          <td><span class="badge b-mc">MC Next on Core</span></td>
+          <td><span class="badge b-type">API Response</span></td>
+          <td><code>RankedContentIds[]</code> <code>PatientContext</code> <code>GeneratedAt</code></td>
+          <td>Ranked JSON payload returned by MC Next personalisation API after check-in POST. Replaces the local <code>personalise()</code> function when Salesforce is live.</td>
+        </tr>
+
+        <!-- ── Agentforce ── -->
+        <tr>
+          <td><strong>Patient Support Agent</strong></td>
+          <td><span class="badge b-af">Agentforce</span></td>
+          <td><span class="badge b-type">Agent</span></td>
+          <td>Actions: <code>answer_faq</code> <code>check_dose_history</code> <code>escalate_to_nurse</code> <code>summarise_report</code></td>
+          <td>Powers the in-app Agentforce chat bubble. Handles patient queries 24/7, proactively nudges on missed check-ins, and summarises health reports for HCP visits.</td>
+        </tr>
+        <tr>
+          <td><strong>Navigator Agent</strong></td>
+          <td><span class="badge b-af">Agentforce</span></td>
+          <td><span class="badge b-type">Agent</span></td>
+          <td>Actions: <code>review_alert</code> <code>approve_outreach</code> <code>draft_message</code></td>
+          <td>Surfaces in the Patient Navigator command centre dashboard. Processes At-Risk queue, drafts personalised outreach messages for Navigator one-click approval.</td>
+        </tr>
+        <tr>
+          <td><strong>Proactive Outreach Action</strong></td>
+          <td><span class="badge b-af">Agentforce</span></td>
+          <td><span class="badge b-type">Agent Action</span></td>
+          <td><code>PatientId</code> <code>Channel</code> <code>MessageTemplate</code> <code>ApprovedBy</code> <code>SentAt</code></td>
+          <td>Navigator-approved outreach executed by Agentforce. Sends SMS, email, or push based on patient preference after Navigator approval.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="footnote">
+      <strong>Note on MC Next on Core:</strong> This architecture uses the <strong>Salesforce core REST API surface</strong> for personalisation — not the legacy ExactTarget / Interaction Studio API. Content decisions flow through Data Cloud segmentation and are executed via Flow or Apex calling the MC Next personalisation endpoint. The local <code>personalise()</code> function in <code>contentLibrary.js</code> mirrors this logic exactly and will be replaced by the API response when the demo org is connected.<br/><br/>
+      <strong>Streaming connectors:</strong> NRS Score __c, PsOdisk Domain Score __c, and Dose Confirmation __c are written to Health Cloud on check-in submission. A Salesforce–Data Cloud streaming connector ingests these writes in near-real-time, triggering Calculated Insight re-evaluation and segment membership updates within seconds.
+    </p>
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      flowchart: { curve: 'basis', padding: 20 },
+    });
+  </script>
+
+</body>
+</html>

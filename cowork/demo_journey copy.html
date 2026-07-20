@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zasocitinib App — Demo Journey</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+    background: #F0F2F8;
+    color: #1a1a2e;
+    padding: 36px 32px 48px;
+    min-width: 1080px;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.3px;
+  }
+  .header p {
+    font-size: 13px;
+    color: #64748b;
+    margin-top: 6px;
+  }
+
+  /* ── Diagram wrapper — position:relative so SVG overlay can sit inside ── */
+  #diagram-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+  }
+
+  /* ── Each lane ── */
+  .lane {
+    display: flex;
+    align-items: stretch;
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04);
+  }
+
+  .lane-header {
+    width: 130px;
+    min-width: 130px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 12px;
+    text-align: center;
+    color: white;
+  }
+  .lane-header .icon {
+    font-size: 26px;
+    margin-bottom: 8px;
+    line-height: 1;
+  }
+  .lane-header .name {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    line-height: 1.4;
+    opacity: 0.95;
+  }
+
+  .lane-patient  .lane-header { background: linear-gradient(160deg, #6366f1, #8b5cf6); }
+  .lane-dc       .lane-header { background: linear-gradient(160deg, #0ea5e9, #0070d2); }
+  .lane-delegate .lane-header { background: linear-gradient(160deg, #10b981, #0d9488); }
+
+  /* ── Steps row — no independent scroll so arrow positions stay in sync ── */
+  .lane-steps {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 20px 18px;
+    gap: 0;
+    border-left: 1px solid #e8edf2;
+  }
+
+  /* ── Individual step ── */
+  .step { display: flex; align-items: center; flex-shrink: 0; }
+
+  .box {
+    background: #fafbfc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 11px 14px;
+    width: 140px;
+    text-align: center;
+    position: relative;
+    transition: box-shadow 0.15s, transform 0.15s;
+    cursor: default;
+  }
+  .box:hover {
+    box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+  }
+
+  .box-num   { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 5px; }
+  .box-label { font-size: 12px; font-weight: 650; color: #0f172a; line-height: 1.4; }
+  .box-detail{ font-size: 10px; color: #94a3b8; margin-top: 4px; line-height: 1.35; }
+
+  .lane-patient  .box { border-left: 3px solid #6366f1; }
+  .lane-patient  .box-num { color: #6366f1; }
+  .lane-dc       .box { border-left: 3px solid #0ea5e9; }
+  .lane-dc       .box-num { color: #0ea5e9; }
+  .lane-delegate .box { border-left: 3px solid #10b981; }
+  .lane-delegate .box-num { color: #10b981; }
+
+  /* ── Key moment box ── */
+  .box.key {
+    background: linear-gradient(135deg, #fff7ed, #fef3c7);
+    border: 2px solid #f97316;
+    border-left: 3px solid #f97316;
+    box-shadow: 0 0 0 4px rgba(249,115,22,0.12);
+  }
+  .box.key .box-num   { color: #f97316; }
+  .box.key .box-label { color: #9a3412; }
+
+  .key-badge {
+    position: absolute;
+    top: -11px; left: 50%;
+    transform: translateX(-50%);
+    background: #f97316;
+    color: white;
+    font-size: 8.5px; font-weight: 800;
+    padding: 2px 9px;
+    border-radius: 999px;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Alert box ── */
+  .box.alert {
+    background: #fff1f2;
+    border: 1.5px solid #fda4af;
+    border-left: 3px solid #f43f5e;
+  }
+  .box.alert .box-num   { color: #f43f5e; }
+  .box.alert .box-label { color: #9f1239; }
+
+  /* ── Horizontal arrow between steps ── */
+  .arrow { padding: 0 7px; color: #cbd5e1; font-size: 18px; flex-shrink: 0; user-select: none; }
+
+  /* ── Invisible spacer (same width as .box) ── */
+  .spacer       { width: 140px; flex-shrink: 0; visibility: hidden; }
+  .spacer-arrow { padding: 0 7px; visibility: hidden; }
+
+  /* ── Legend ── */
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 18px;
+    justify-content: center; margin-top: 24px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 7px; font-size: 11px; color: #64748b; }
+  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Zasocitinib Patient App &mdash; Demo Journey</h1>
+  <p>How patient-entered PRO data flows through Salesforce Data Cloud to drive personalised educational content &amp; delegate support</p>
+</div>
+
+<div id="diagram-wrapper">
+
+  <!-- ═══════════ LANE 1 — Patient ═══════════ -->
+  <div class="lane lane-patient">
+    <div class="lane-header">
+      <div class="icon">👤</div>
+      <div class="name">Patient<br>(Sarah)</div>
+    </div>
+    <div class="lane-steps">
+
+      <div class="step"><div class="box">
+        <div class="box-num">Step 1</div>
+        <div class="box-label">Opens App</div>
+        <div class="box-detail">Home screen: dose card &amp; quick NRS</div>
+      </div></div>
+      <div class="arrow">→</div>
+
+      <div class="step"><div class="box" id="box-p2">
+        <div class="box-num">Step 2</div>
+        <div class="box-label">Confirms Dose</div>
+        <div class="box-detail">Marks zasocitinib 15 mg taken</div>
+      </div></div>
+      <div class="arrow">→</div>
+
+      <div class="step"><div class="box" id="box-p3">
+        <div class="box-num">Step 3</div>
+        <div class="box-label">Rates Itch</div>
+        <div class="box-detail">NRS score: 8 / 10</div>
+      </div></div>
+      <div class="arrow">→</div>
+
+      <div class="step"><div class="box" id="box-p4">
+        <div class="box-num">Step 4</div>
+        <div class="box-label">Completes PsOdisk</div>
+        <div class="box-detail">Sleep 8 &bull; Emotional 7 &bull; Work 6</div>
+      </div></div>
+      <div class="arrow">→</div>
+
+      <div class="step"><div class="box" id="box-p5">
+        <div class="box-num">Step 5</div>
+        <div class="box-label">Submits Check-In</div>
+        <div class="box-detail">"Syncing with Salesforce&hellip;" overlay</div>
+      </div></div>
+      <div class="arrow">→</div>
+
+      <div class="step"><div class="box key" id="box-p6">
+        <div class="key-badge">✦ Personalisation moment</div>
+        <div class="box-num">Step 6</div>
+        <div class="box-label">Personalised Education Hub</div>
+        <div class="box-detail">3 tailored articles surface based on today's scores</div>
+      </div></div>
+      <div class="arrow">→</div>
+
+      <div class="step"><div class="box">
+        <div class="box-num">Step 7</div>
+        <div class="box-label">Reads Article</div>
+        <div class="box-detail">"Psoriasis &amp; Sleep" &bull; "Emotional Wellbeing"</div>
+      </div></div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════ LANE 2 — Salesforce Data Cloud ═══════════ -->
+  <div class="lane lane-dc">
+    <div class="lane-header">
+      <div class="icon">☁️</div>
+      <div class="name">Salesforce<br>Data Cloud</div>
+    </div>
+    <div class="lane-steps">
+
+      <!-- align with Step 1 -->
+      <div class="spacer"></div><div class="arrow spacer-arrow">→</div>
+
+      <div class="step"><div class="box" id="box-dc-a">
+        <div class="box-num">Trigger A</div>
+        <div class="box-label">Adherence Ingested</div>
+        <div class="box-detail">POST /adherence → adherence_events</div>
+      </div></div>
+      <div class="arrow">→</div>
+
+      <div class="step"><div class="box" id="box-dc-b">
+        <div class="box-num">Trigger B</div>
+        <div class="box-label">NRS Score Ingested</div>
+        <div class="box-detail">POST /checkin → pro_assessments</div>
+      </div></div>
+      <div class="arrow">→</div>
+
+      <div class="step"><div class="box" id="box-dc-c">
+        <div class="box-num">Trigger C</div>
+        <div class="box-label">Full PRO Ingested</div>
+        <div class="box-detail">PsOdisk scores → unified patient profile</div>
+      </div></div>
+      <div class="arrow">→</div>
+
+      <div class="step"><div class="box key" id="box-dc-process">
+        <div class="key-badge">✦ Personalisation moment</div>
+        <div class="box-num">Process</div>
+        <div class="box-label">Agentforce Matches Content</div>
+        <div class="box-detail">Sleep, emotional &amp; itch articles selected</div>
+      </div></div>
+      <div class="arrow">→</div>
+
+      <div class="step"><div class="box" id="box-dc-output">
+        <div class="box-num">Output</div>
+        <div class="box-label">Content Set Returned</div>
+        <div class="box-detail">Personalised articles delivered to app</div>
+      </div></div>
+
+      <!-- align with Step 7 -->
+      <div class="arrow spacer-arrow">→</div><div class="spacer"></div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════ LANE 3 — Takeda Patient Delegate ═══════════ -->
+  <div class="lane lane-delegate">
+    <div class="lane-header">
+      <div class="icon">🏥</div>
+      <div class="name">Takeda Patient<br>Delegate</div>
+    </div>
+    <div class="lane-steps">
+
+      <!-- align with Steps 1–2 -->
+      <div class="spacer"></div><div class="arrow spacer-arrow">→</div>
+      <div class="spacer"></div><div class="arrow spacer-arrow">→</div>
+
+      <div class="step"><div class="box" id="box-del-dash">
+        <div class="box-num">View</div>
+        <div class="box-label">PRO Dashboard</div>
+        <div class="box-detail">Patient check-in history &amp; score trends</div>
+      </div></div>
+      <div class="arrow">→</div>
+
+      <div class="step"><div class="box alert" id="box-del-alert">
+        <div class="box-num">Alert</div>
+        <div class="box-label">Elevated Scores Flagged</div>
+        <div class="box-detail">Sleep 8, Emotional 7 — above care threshold</div>
+      </div></div>
+      <div class="arrow">→</div>
+
+      <div class="step"><div class="box">
+        <div class="box-num">Review</div>
+        <div class="box-label">Content Engagement</div>
+        <div class="box-detail">Which articles Sarah read &amp; time spent</div>
+      </div></div>
+      <div class="arrow">→</div>
+
+      <div class="step"><div class="box">
+        <div class="box-num">Action</div>
+        <div class="box-label">Initiates Outreach</div>
+        <div class="box-detail">Proactive support call logged in Salesforce</div>
+      </div></div>
+      <div class="arrow">→</div>
+
+      <div class="step"><div class="box">
+        <div class="box-num">Close Loop</div>
+        <div class="box-label">Coordinates with HCP</div>
+        <div class="box-detail">PRO summary informs next consultation</div>
+      </div></div>
+
+    </div>
+  </div>
+
+</div><!-- end #diagram-wrapper -->
+
+<!-- ── Legend ── -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-swatch" style="background:#818cf8;"></div>Patient → Data Cloud</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#fb923c;"></div>Data Cloud → Patient (personalisation)</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#22d3ee;"></div>Data Cloud → Delegate</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#f97316;"></div>Personalisation moment</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#f43f5e;"></div>Elevated score alert</div>
+</div>
+
+<script>
+function drawArrows() {
+  const wrapper = document.getElementById('diagram-wrapper');
+  const old = document.getElementById('arrow-svg');
+  if (old) old.remove();
+
+  const wRect = wrapper.getBoundingClientRect();
+
+  // ── SVG overlay ──
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.id = 'arrow-svg';
+  Object.assign(svg.style, {
+    position: 'absolute', top: '0', left: '0',
+    width: wRect.width + 'px', height: wRect.height + 'px',
+    pointerEvents: 'none', overflow: 'visible', zIndex: '10'
+  });
+
+  // ── Arrow-head markers ──
+  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+  [
+    { id: 'arr-purple', color: '#818cf8' },
+    { id: 'arr-orange', color: '#fb923c' },
+    { id: 'arr-cyan',   color: '#22d3ee' },
+  ].forEach(({ id, color }) => {
+    const m = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+    m.setAttribute('id', id);
+    m.setAttribute('markerWidth', '9'); m.setAttribute('markerHeight', '7');
+    m.setAttribute('refX', '8'); m.setAttribute('refY', '3.5');
+    m.setAttribute('orient', 'auto');
+    const p = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    p.setAttribute('points', '0 0, 9 3.5, 0 7');
+    p.setAttribute('fill', color);
+    m.appendChild(p); defs.appendChild(m);
+  });
+  svg.appendChild(defs);
+
+  // ── Helper: get box rect relative to wrapper ──
+  function pos(id) {
+    const el = document.getElementById(id);
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return {
+      top:    r.top    - wRect.top,
+      bottom: r.bottom - wRect.top,
+      cx:     r.left + r.width  / 2 - wRect.left,
+      cy:     r.top  + r.height / 2 - wRect.top,
+    };
+  }
+
+  // ── Connections ──
+  const conns = [
+    { from: 'box-p2',         to: 'box-dc-a',       mid: 'arr-purple', color: '#818cf8', dash: '5 3', label: 'dose confirmed' },
+    { from: 'box-p3',         to: 'box-dc-b',       mid: 'arr-purple', color: '#818cf8', dash: '5 3', label: 'NRS recorded' },
+    { from: 'box-p4',         to: 'box-dc-c',       mid: 'arr-purple', color: '#818cf8', dash: '5 3', label: 'PRO submitted' },
+    { from: 'box-dc-output',  to: 'box-p6',         mid: 'arr-orange', color: '#fb923c', dash: null,  label: 'personalised content' },
+    { from: 'box-dc-process', to: 'box-del-alert',  mid: 'arr-cyan',   color: '#22d3ee', dash: '5 3', label: 'score threshold' },
+  ];
+
+  conns.forEach(({ from, to, mid, color, dash, label }) => {
+    const f = pos(from), t = pos(to);
+    if (!f || !t) return;
+
+    const goDown = t.cy > f.cy;
+    const x1 = f.cx, x2 = t.cx;
+    const y1 = goDown ? f.bottom + 2  : f.top - 2;
+    const y2 = goDown ? t.top    - 4  : t.bottom + 4;
+    const midY = (y1 + y2) / 2;
+
+    // Cubic bezier — vertical with soft S-curve if x differs
+    const d = `M${x1},${y1} C${x1},${midY} ${x2},${midY} ${x2},${y2}`;
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', from === 'box-dc-output' ? '2' : '1.5');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('marker-end', `url(#${mid})`);
+    path.setAttribute('opacity', from === 'box-dc-output' ? '0.85' : '0.6');
+    if (dash) path.setAttribute('stroke-dasharray', dash);
+    svg.appendChild(path);
+
+    // ── Label pill ──
+    const lx = Math.max(x1, x2) + 8;
+    const ly = midY;
+    const LABEL_W = label.length * 5.6 + 10;
+    const LABEL_H = 14;
+
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', lx - 2);
+    rect.setAttribute('y', ly - LABEL_H / 2);
+    rect.setAttribute('width', LABEL_W);
+    rect.setAttribute('height', LABEL_H);
+    rect.setAttribute('rx', '4');
+    rect.setAttribute('fill', 'white');
+    rect.setAttribute('fill-opacity', '0.9');
+    svg.appendChild(rect);
+
+    const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    txt.setAttribute('x', lx + 2);
+    txt.setAttribute('y', ly);
+    txt.setAttribute('font-size', '9');
+    txt.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, sans-serif');
+    txt.setAttribute('fill', color);
+    txt.setAttribute('font-weight', '700');
+    txt.setAttribute('dominant-baseline', 'middle');
+    txt.textContent = label;
+    svg.appendChild(txt);
+  });
+
+  wrapper.appendChild(svg);
+}
+
+// Draw once layout has settled, then redraw on resize
+window.addEventListener('load', () => {
+  requestAnimationFrame(() => requestAnimationFrame(drawArrows));
+});
+window.addEventListener('resize', drawArrows);
+</script>
+
+</body>
+</html>

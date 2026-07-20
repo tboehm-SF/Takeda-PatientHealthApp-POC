@@ -1,0 +1,34 @@
+openapi: 3.0.3
+info:
+  title: ZasocitinibApp Adherence Events
+  version: 1.0.0
+paths:
+  /adherence_events:
+    post:
+      summary: Ingest daily dose adherence confirmations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/adherence_events'
+      responses:
+        '200':
+          description: Success
+components:
+  schemas:
+    adherence_events:
+      type: object
+      required:
+        - device_id
+        - dose_datetime
+      properties:
+        device_id:
+          type: string
+        dose_datetime:
+          type: string
+          format: date-time
+        dose_confirmed:
+          type: boolean
+        week_on_therapy:
+          type: integer

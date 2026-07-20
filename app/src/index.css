@@ -1,0 +1,280 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+    background: linear-gradient(135deg, #b2ebf2 0%, #e0f7fa 50%, #b2dfdb 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  #root {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100vw;
+    height: 100vh;
+  }
+}
+
+@layer components {
+  /* Phone frame */
+  .phone-frame {
+    position: relative;
+    width: 390px;
+    height: 844px;
+    background: #1c1c1e;
+    border-radius: 50px;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.15),
+      0 40px 100px rgba(0, 0, 0, 0.45),
+      inset 0 0 0 1px #3a3a3c;
+    flex-shrink: 0;
+  }
+
+  .phone-screen {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    background: #ffffff;
+    border-radius: 44px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Dynamic Island */
+  .dynamic-island {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 126px;
+    height: 36px;
+    background: #1c1c1e;
+    border-radius: 20px;
+    z-index: 50;
+  }
+
+  /* Side buttons */
+  .phone-frame::before {
+    content: '';
+    position: absolute;
+    left: -3px;
+    top: 140px;
+    width: 4px;
+    height: 34px;
+    background: #3a3a3c;
+    border-radius: 2px 0 0 2px;
+    box-shadow: 0 46px 0 #3a3a3c, 0 92px 0 #3a3a3c;
+  }
+
+  .phone-frame::after {
+    content: '';
+    position: absolute;
+    right: -3px;
+    top: 182px;
+    width: 4px;
+    height: 72px;
+    background: #3a3a3c;
+    border-radius: 0 2px 2px 0;
+  }
+
+  /* Scrollable screen content */
+  .screen-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    background: #f5f8fa;
+  }
+
+  .screen-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* iOS home indicator */
+  .home-indicator {
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    flex-shrink: 0;
+  }
+
+  .home-indicator-bar {
+    width: 134px;
+    height: 5px;
+    background: #1c1c1e;
+    border-radius: 3px;
+    opacity: 0.2;
+  }
+
+  /* Card styles */
+  .card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  }
+
+  /* Teal CTA card */
+  .cta-card {
+    background: linear-gradient(135deg, #1a8b91 0%, #2dc8ce 100%);
+    border-radius: 16px;
+    color: white;
+  }
+
+  /* Pill badge */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  /* Syncing overlay */
+  .syncing-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 44px;
+  }
+
+  /* Smooth transitions */
+  .screen-enter {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes pulse-ring {
+    0% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.05); opacity: 0.4; }
+    100% { transform: scale(1); opacity: 0.8; }
+  }
+
+  .pulse-ring {
+    animation: pulse-ring 2s ease-in-out infinite;
+  }
+
+  @keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .spin-slow {
+    animation: spin-slow 1.2s linear infinite;
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-in {
+    animation: fade-in 0.4s ease-out forwards;
+  }
+
+  /* Number selector (PsOdisk) */
+  .num-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    border: 1.5px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    font-weight: 600;
+    color: #1a1a2e;
+    background: white;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+  }
+
+  .num-btn:hover {
+    border-color: #2dc8ce;
+    color: #2dc8ce;
+  }
+
+  .num-btn.selected {
+    background: #2dc8ce;
+    border-color: #2dc8ce;
+    color: white;
+  }
+
+  /* NRS Slider */
+  input[type='range'].nrs-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(to right, #2dc8ce 0%, #2dc8ce var(--fill), #e2e8f0 var(--fill), #e2e8f0 100%);
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type='range'].nrs-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #2dc8ce;
+    box-shadow: 0 2px 8px rgba(45, 200, 206, 0.4);
+    cursor: pointer;
+  }
+
+  input[type='range'].nrs-slider::-moz-range-thumb {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #2dc8ce;
+    box-shadow: 0 2px 8px rgba(45, 200, 206, 0.4);
+    cursor: pointer;
+  }
+
+  /* Recharts tooltip */
+  .custom-tooltip {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+}

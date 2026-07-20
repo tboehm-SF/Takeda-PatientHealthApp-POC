@@ -1,0 +1,65 @@
+openapi: 3.0.3
+info:
+  title: ZasocitinibApp PRO Assessments
+  version: 1.0.0
+paths:
+  /pro_assessments:
+    post:
+      summary: Ingest PRO check-in data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/pro_assessments'
+      responses:
+        '200':
+          description: Success
+components:
+  schemas:
+    pro_assessments:
+      type: object
+      required:
+        - device_id
+        - check_in_datetime
+      properties:
+        device_id:
+          type: string
+        check_in_datetime:
+          type: string
+          format: date-time
+        week_on_therapy:
+          type: integer
+        nrs_score:
+          type: number
+          format: float
+        psodisk_itch:
+          type: number
+          format: float
+        psodisk_pain:
+          type: number
+          format: float
+        psodisk_scaling:
+          type: number
+          format: float
+        psodisk_fatigue:
+          type: number
+          format: float
+        psodisk_sleep:
+          type: number
+          format: float
+        psodisk_emotional:
+          type: number
+          format: float
+        psodisk_body:
+          type: number
+          format: float
+        psodisk_social:
+          type: number
+          format: float
+        psodisk_work:
+          type: number
+          format: float
+        psodisk_overall:
+          type: number
+          format: float
