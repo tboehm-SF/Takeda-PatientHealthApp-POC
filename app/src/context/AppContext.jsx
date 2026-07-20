@@ -22,8 +22,8 @@ const DEFAULT_PROFILE = {
   firstName: 'Sarah',
   lastName: 'Mitchell',
   age: 34,
-  email: 'sarah.mitchell@example.com',
-  emailConsent: true,
+  email: '',
+  emailConsent: false,
   treatmentStartDate: '2026-06-17', // gives Week 4 from 2026-07-14
 }
 
@@ -38,10 +38,19 @@ function treatmentPhaseLabel(week) {
   return 'Maintenance phase'
 }
 
+const PROFILE_VERSION = 2 // bump to force-reset cached profiles
+
 function loadProfile() {
   try {
     const stored = JSON.parse(localStorage.getItem('zaso_profile'))
-    return stored ? { ...DEFAULT_PROFILE, ...stored } : DEFAULT_PROFILE
+    const storedVersion = Number(localStorage.getItem('zaso_profile_v') || 0)
+    if (stored && storedVersion >= PROFILE_VERSION) {
+      return { ...DEFAULT_PROFILE, ...stored }
+    }
+    // Version mismatch — clear stale cache and start fresh
+    localStorage.removeItem('zaso_profile')
+    localStorage.setItem('zaso_profile_v', String(PROFILE_VERSION))
+    return DEFAULT_PROFILE
   } catch {
     return DEFAULT_PROFILE
   }
@@ -69,6 +78,7 @@ export function AppProvider({ children }) {
   function updateProfile(newProfile) {
     setProfile(newProfile)
     localStorage.setItem('zaso_profile', JSON.stringify(newProfile))
+    localStorage.setItem('zaso_profile_v', String(PROFILE_VERSION))
   }
 
   // patient merges editable identity with mock clinical data + computed week

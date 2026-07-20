@@ -108,6 +108,15 @@ export default function D360Panel() {
     if (syncingState === 'done') pushD360Event('Data Cloud Sync Complete', 'dataSync')
   }, [syncingState])
 
+  // Track profile changes (identity resolution)
+  const prevProfile = useRef(profile)
+  useEffect(() => {
+    if (prevProfile.current !== profile && prevProfile.current.deviceId !== profile.deviceId) {
+      // Device ID change already tracked by ProfileModal
+    }
+    prevProfile.current = profile
+  }, [profile])
+
   const isKnown = Boolean(profile.email && profile.emailConsent)
   const consentStatus = profile.emailConsent ? 'granted' : 'pending'
 
@@ -143,9 +152,13 @@ export default function D360Panel() {
           </Section>
 
           {/* Identity */}
-          <Section icon="🔑" title="Identity">
+          <Section icon="🔑" title="Identity Resolution">
+            <Row label="Session ID" value={<span style={{ color: '#a78bfa', fontWeight: 600 }} title={sessionId.current}>{sessionId.current.slice(0, 8)}…</span>} />
             <Row label="Device ID" value={<span style={{ color: '#60a5fa', fontWeight: 600 }}>{profile.deviceId}</span>} />
             <Row label="Patient" value={`${profile.firstName} ${profile.lastName}`} />
+            {profile.email && (
+              <Row label="Email" value={<span style={{ color: '#34d399' }}>{profile.email}</span>} />
+            )}
             <Row label="Status" value={
               isKnown
                 ? <span className="d360-id-badge known">🟢 KNOWN</span>

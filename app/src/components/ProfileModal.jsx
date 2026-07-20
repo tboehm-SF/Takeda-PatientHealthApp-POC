@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useApp } from '../context/AppContext'
+import { pushD360Event } from './D360Panel'
 
 const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 
@@ -12,6 +13,38 @@ export default function ProfileModal({ onClose }) {
   const [form, setForm] = useState({ ...profile })
 
   function handleSave() {
+    const prevKnown = Boolean(profile.email && profile.emailConsent)
+    const nextKnown = Boolean(form.email && form.emailConsent)
+
+    // Track attribute changes
+    if (form.deviceId !== profile.deviceId) {
+      pushD360Event(`Device ID Changed → ${form.deviceId}`, 'identity')
+    }
+    if (form.firstName !== profile.firstName || form.lastName !== profile.lastName) {
+      pushD360Event(`Profile Updated → ${form.firstName} ${form.lastName}`, 'identity')
+    }
+
+    // Identity stitching: anonymous → known
+    if (!prevKnown && nextKnown) {
+      pushD360Event(`Identity Stitched: Anonymous → Known (${form.email})`, 'identity_resolution')
+    } else if (prevKnown && !nextKnown) {
+      pushD360Event('Identity Reverted: Known → Anonymous', 'identity_resolution')
+    }
+
+    // Consent change
+    if (form.emailConsent !== profile.emailConsent) {
+      pushD360Event(
+        form.emailConsent ? 'Consent Granted (Email)' : 'Consent Revoked (Email)',
+        'consent',
+      )
+    }
+
+    // Email change
+    if (form.email && form.email !== profile.email) {
+      pushD360Event(`Email Captured: ${form.email}`, 'identity')
+    }
+
+    pushD360Event('Profile Saved', 'engagement')
     updateProfile(form)
     onClose()
   }

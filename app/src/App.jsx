@@ -66,8 +66,9 @@ function DemoNote() {
     <div className="demo-note">
       <span className="demo-note-icon">ℹ️</span>
       <span>
-        <strong>Demo mode</strong> — Patient consent is auto-granted.
-        Data Cloud tracking events are logged to the browser console.
+        <strong>Demo mode</strong> — Tap the profile initials to add email &amp; grant consent.
+        Identity stitches from anonymous → known in real time.
+        Events are logged to the browser console.
       </span>
     </div>
   )
