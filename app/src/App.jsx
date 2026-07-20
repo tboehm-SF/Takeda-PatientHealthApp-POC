@@ -4,6 +4,7 @@ import BottomNav from './components/BottomNav'
 import AgentforceChat from './components/AgentforceChat'
 import ProfileModal from './components/ProfileModal'
 import D360Panel from './components/D360Panel'
+import DemoPersonas from './components/DemoPersonas'
 import HomeScreen from './screens/HomeScreen'
 import DailyCheckIn from './screens/DailyCheckIn'
 import EducationHub from './screens/EducationHub'
@@ -79,6 +80,7 @@ export default function App() {
     <AppProvider>
       <D360Panel />
       <PhoneApp />
+      <DemoPersonas />
       <DemoNote />
     </AppProvider>
   )

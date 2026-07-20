@@ -1,4 +1,5 @@
 import { useApp } from '../context/AppContext'
+import { pushD360Event } from './D360Panel'
 
 const tabs = [
   {
@@ -88,7 +89,7 @@ export default function BottomNav() {
           return (
             <button
               key={tab.id}
-              onClick={() => setCurrentScreen(tab.id)}
+              onClick={() => { pushD360Event(`Nav: ${tab.label}`, 'click'); setCurrentScreen(tab.id) }}
               className="flex-1 flex flex-col items-center py-2 gap-0.5 focus:outline-none"
             >
               {tab.icon(active)}

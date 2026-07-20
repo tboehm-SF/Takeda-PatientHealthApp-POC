@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useApp } from '../context/AppContext'
+import { pushD360Event } from '../components/D360Panel'
 import { psodiskDomains } from '../data/mockData'
 
 const NRS_LABELS = ['No itch', '', '', 'Mild', '', 'Moderate', '', 'Severe', '', '', 'Worst possible']
@@ -23,12 +24,14 @@ export default function DailyCheckIn() {
   const psodiskStarted = psodiskStep !== null
 
   function handleSaveNrs() {
+    pushD360Event(`NRS Saved: ${localNrs}/10`, 'click')
     saveNrsScore(localNrs)
     setNrsSaved(true)
     setTimeout(() => setNrsSaved(false), 2000)
   }
 
   function handleSubmit() {
+    pushD360Event('Check-In Submit', 'click')
     submitCheckIn(localNrs, localPsodisk)
   }
 
@@ -255,7 +258,7 @@ export default function DailyCheckIn() {
                 Rate 10 aspects of how psoriasis has affected you. Your answers personalise your Education Hub content.
               </p>
               <button
-                onClick={() => setPsodiskStep(0)}
+                onClick={() => { pushD360Event('Start PsOdisk', 'click'); setPsodiskStep(0) }}
                 className="w-full py-3 rounded-xl font-semibold text-[14px] border-2 border-primary text-primary"
               >
                 Start PsOdisk →

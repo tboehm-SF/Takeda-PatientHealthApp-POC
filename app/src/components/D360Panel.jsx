@@ -197,9 +197,11 @@ export default function D360Panel() {
     )
 
     pushD360Event(`${SCREEN_LABELS[currentScreen] || currentScreen} View`, 'screenView')
-    // Engaged visit after 15s
-    const timer = setTimeout(() => pushD360Event('Engaged Visit (15s)', 'engagement'), 15000)
-    return () => clearTimeout(timer)
+    // Engaged visit timers: 15s, 1min, 2min
+    const t15s = setTimeout(() => pushD360Event('Engaged Visit (15s)', 'engagement'), 15000)
+    const t1m  = setTimeout(() => pushD360Event('Engaged Visit (1m)', 'engagement'), 60000)
+    const t2m  = setTimeout(() => pushD360Event('Engaged Visit (2m)', 'engagement'), 120000)
+    return () => { clearTimeout(t15s); clearTimeout(t1m); clearTimeout(t2m) }
   }, [])
 
   // Track dose confirmation

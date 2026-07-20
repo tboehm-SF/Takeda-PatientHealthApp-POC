@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useApp } from '../context/AppContext'
+import { pushD360Event } from '../components/D360Panel'
 import { getForYouNow, contentLibrary, categories, personalise } from '../data/contentLibrary'
 import ContentCard from '../components/ContentCard'
 
@@ -90,7 +91,7 @@ export default function EducationHub() {
             {categories.map((cat) => (
               <button
                 key={cat.label}
-                onClick={() => setActiveCategory(activeCategory === cat.label ? null : cat.label)}
+                onClick={() => { pushD360Event(`Category: ${cat.label}`, 'click'); setActiveCategory(activeCategory === cat.label ? null : cat.label) }}
                 className={`rounded-xl overflow-hidden text-left relative h-20 transition-all ${
                   activeCategory === cat.label ? 'ring-2 ring-primary' : ''
                 }`}

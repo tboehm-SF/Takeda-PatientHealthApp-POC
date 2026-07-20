@@ -1,4 +1,5 @@
 import { useApp } from '../context/AppContext'
+import { pushD360Event } from '../components/D360Panel'
 import { nrsHistory } from '../data/mockData'
 import { getForYouNow } from '../data/contentLibrary'
 import ContentCard from '../components/ContentCard'
@@ -30,7 +31,7 @@ export default function HomeScreen() {
             </h1>
           </div>
           <button
-            onClick={() => setProfileOpen(true)}
+            onClick={() => { pushD360Event('Profile Icon Tap', 'click'); setProfileOpen(true) }}
             className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white font-bold text-[15px] mt-1 active:opacity-80 transition-opacity"
           >
             {profile.firstName && profile.lastName
@@ -82,7 +83,7 @@ export default function HomeScreen() {
               </div>
               <div className="flex flex-col items-end gap-2">
                 <button
-                  onClick={confirmDose}
+                  onClick={() => { pushD360Event('Confirm Dose Tap', 'click'); confirmDose() }}
                   className="flex items-center gap-1.5 bg-white text-primary font-bold text-[13px] px-4 py-2 rounded-full shadow-sm"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -90,7 +91,7 @@ export default function HomeScreen() {
                   </svg>
                   Confirm
                 </button>
-                <button className="text-white/60 text-[11px]">Missed dose</button>
+                <button onClick={() => pushD360Event('Missed Dose Tap', 'click')} className="text-white/60 text-[11px]">Missed dose</button>
               </div>
             </div>
           </div>
@@ -140,7 +141,7 @@ export default function HomeScreen() {
             </LineChart>
           </ResponsiveContainer>
           <button
-            onClick={() => setCurrentScreen('checkin')}
+            onClick={() => { pushD360Event('Log NRS Score Tap', 'click'); setCurrentScreen('checkin') }}
             className="mt-2 text-[12px] font-semibold text-primary"
           >
             Log today's score →
@@ -150,7 +151,7 @@ export default function HomeScreen() {
         {/* Daily Check-in prompt */}
         {!checkInSubmitted && (
           <button
-            onClick={() => setCurrentScreen('checkin')}
+            onClick={() => { pushD360Event('Check-In Card Tap', 'click'); setCurrentScreen('checkin') }}
             className="w-full card px-4 py-4 flex items-center gap-3 text-left"
           >
             <div className="w-10 h-10 rounded-full bg-primary-light flex items-center justify-center flex-shrink-0">
@@ -180,7 +181,7 @@ export default function HomeScreen() {
                 </span>
               )}
             </h2>
-            <button onClick={() => setCurrentScreen('education')} className="text-[12px] font-semibold text-primary">See all</button>
+            <button onClick={() => { pushD360Event('See All Articles Tap', 'click'); setCurrentScreen('education') }} className="text-[12px] font-semibold text-primary">See all</button>
           </div>
           <div className="space-y-2">
             {forYouNow.map((item) => (
