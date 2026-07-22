@@ -14,41 +14,5 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-
-    <!-- Salesforce Embedded Messaging SDK (Agentforce MIAW) -->
-    <style>
-      /* Hide the SDK's default floating chat button — our React UI triggers it */
-      #embeddedMessagingConversationButton,
-      .embeddedMessagingConversationButton,
-      .embeddedMessagingConversationButtonWrapper,
-      #embedded-messaging > .embeddedMessagingConversationButtonWrapper {
-        display: none !important;
-        visibility: hidden !important;
-        pointer-events: none !important;
-      }
-    </style>
-    <script>
-
-      // Initialize the SDK once the script loads
-      function initEmbeddedMessaging() {
-        try {
-          embeddedservice_bootstrap.settings.language = 'en_US';
-          embeddedservice_bootstrap.init(
-            '00DHn000009hxPn',
-            'Zasocitinib_Patient_Support',
-            'https://storm-ffbfcc9fa2ad3e.my.site.com/ESWZasocitinibPatientSu1784554656094',
-            { scrt2URL: 'https://storm-ffbfcc9fa2ad3e.my.salesforce-scrt.com' }
-          );
-          console.log('[Agentforce] Embedded Messaging SDK initialized');
-        } catch (err) {
-          console.error('[Agentforce] SDK init error:', err);
-        }
-      }
-    </script>
-    <script
-      type="text/javascript"
-      src="https://storm-ffbfcc9fa2ad3e.my.site.com/ESWZasocitinibPatientSu1784554656094/assets/js/bootstrap.min.js"
-      onload="initEmbeddedMessaging()"
-    ></script>
   </body>
 </html>

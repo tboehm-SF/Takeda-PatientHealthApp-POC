@@ -4,19 +4,16 @@ import { pushD360Event } from '../components/D360Panel'
 
 /**
  * React hook that manages a real-time conversation with the Agentforce
- * Service Agent via the SCRT2 REST + SSE API (unauthenticated path).
+ * Service Agent via the SCRT2 v2 REST + SSE API (unauthenticated path).
  *
  * Flow:
  *   1.  On first user message → obtain an unauthenticated access token
- *   2.  Create a conversation
+ *   2.  Create a conversation with routingType: "agent"
  *   3.  Open an SSE stream for agent replies
  *   4.  Send user messages and surface agent responses in real time
  */
 
-// Use the v1 SCRT2 endpoints (compatible with Web-type deployments)
-const CLIENT_NAME = 'Web_v1'
-const TOKEN_ENDPOINT = `${config.scrt2URL}/iamessage/v1/authorization/unauthenticated/accessToken?clientName=${CLIENT_NAME}`
-const CONVERSATION_ENDPOINT = `${config.scrt2URL}/iamessage/v1/conversation`
+const SCRT2_BASE = config.scrt2URL
 
 export default function useAgentforceChat() {
   const [messages, setMessages] = useState([
@@ -34,41 +31,55 @@ export default function useAgentforceChat() {
   const tokenRef = useRef(null)
   const conversationIdRef = useRef(null)
   const sseRef = useRef(null)
-  const pendingChunks = useRef('')
 
   // ---------- helpers ----------
 
+  /** Step 1: Obtain unauthenticated access token (SCRT2 v2) */
   async function getAccessToken() {
-    const res = await fetch(TOKEN_ENDPOINT, {
+    const url = `${SCRT2_BASE}/iamessage/api/v2/authorization/unauthenticated/access-token`
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         orgId: config.orgId,
-        developerName: config.deploymentName,
-        capabilitiesVersion: '260',
+        esDeveloperName: config.deploymentName,
+        capabilitiesVersion: '1',
       }),
     })
-    if (!res.ok) throw new Error(`Token request failed: ${res.status}`)
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '')
+      throw new Error(`Token request failed: ${res.status} ${errText}`)
+    }
     const data = await res.json()
     return data.accessToken
   }
 
+  /** Step 2: Create conversation (SCRT2 v2) */
   async function createConversation(token) {
-    const res = await fetch(`${CONVERSATION_ENDPOINT}?clientName=${CLIENT_NAME}`, {
+    const url = `${SCRT2_BASE}/iamessage/api/v2/conversation`
+    const res = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
+        'X-Org-Id': config.orgId,
       },
-      body: JSON.stringify({}),
+      body: JSON.stringify({
+        routingType: 'agent',
+      }),
     })
-    if (!res.ok) throw new Error(`Conversation creation failed: ${res.status}`)
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '')
+      throw new Error(`Conversation creation failed: ${res.status} ${errText}`)
+    }
     const data = await res.json()
     return data.conversationId
   }
 
+  /** Step 3: Open SSE stream for agent responses */
   function openSSE(token, conversationId) {
-    const url = `${config.scrt2URL}/iamessage/v1/conversation/${conversationId}/events?accessToken=${encodeURIComponent(token)}&clientName=${CLIENT_NAME}`
+    // Try v2 SSE endpoint first, fallback to v1 if needed
+    const url = `${SCRT2_BASE}/iamessage/api/v2/conversation/${conversationId}/events?accessToken=${encodeURIComponent(token)}`
     const source = new EventSource(url)
 
     source.addEventListener('CONVERSATION_MESSAGE', (e) => {
@@ -79,11 +90,7 @@ export default function useAgentforceChat() {
           payload?.conversationEntry?.entryType === 'Message' &&
           payload?.conversationEntry?.sender?.role === 'Agent'
         ) {
-          const text =
-            payload.conversationEntry?.entryPayload?.text ||
-            payload.conversationEntry?.entryPayload?.abstractMessage?.messageType === 'StaticContentMessage'
-              ? extractText(payload.conversationEntry.entryPayload)
-              : ''
+          const text = extractText(payload.conversationEntry?.entryPayload)
           if (text) {
             setMessages((prev) => [
               ...prev,
@@ -98,6 +105,29 @@ export default function useAgentforceChat() {
       }
     })
 
+    // Also listen for generic 'message' events (some SCRT2 versions use this)
+    source.onmessage = (e) => {
+      try {
+        const payload = JSON.parse(e.data)
+        if (
+          payload?.conversationEntry?.entryType === 'Message' &&
+          payload?.conversationEntry?.sender?.role === 'Agent'
+        ) {
+          const text = extractText(payload.conversationEntry?.entryPayload)
+          if (text) {
+            setMessages((prev) => [
+              ...prev,
+              { id: `bot-${Date.now()}-${Math.random()}`, sender: 'bot', text },
+            ])
+            pushD360Event('Agent Response Received', 'agentforce')
+          }
+          setIsTyping(false)
+        }
+      } catch {
+        // not all messages are JSON
+      }
+    }
+
     source.addEventListener('CONVERSATION_TYPING_STARTED_INDICATOR', () => {
       setIsTyping(true)
     })
@@ -108,9 +138,15 @@ export default function useAgentforceChat() {
 
     source.addEventListener('CONVERSATION_ROUTED', () => {
       // Agent accepted the conversation — no user-visible action needed.
+      console.log('[Agentforce] Conversation routed to agent')
     })
 
-    source.onerror = () => {
+    source.addEventListener('CONVERSATION_PARTICIPANT_CHANGED', () => {
+      console.log('[Agentforce] Participant changed')
+    })
+
+    source.onerror = (err) => {
+      console.warn('[Agentforce] SSE error:', err)
       // EventSource will auto-reconnect for transient failures.
       setIsTyping(false)
     }
@@ -128,7 +164,9 @@ export default function useAgentforceChat() {
     // FormatType RichLink / ListPicker can contain a text field
     if (payload.abstractMessage?.staticContent?.text)
       return payload.abstractMessage.staticContent.text
-    // Fallback: stringify for debugging (won't normally surface)
+    // v2 format: message.text
+    if (payload.message?.text) return payload.message.text
+    // Fallback
     return ''
   }
 
@@ -147,39 +185,44 @@ export default function useAgentforceChat() {
         // Lazy-init: first message triggers auth + conversation creation
         if (!tokenRef.current || !conversationIdRef.current) {
           setIsConnecting(true)
+          console.log('[Agentforce] Obtaining access token...')
           tokenRef.current = await getAccessToken()
+          console.log('[Agentforce] Token obtained, creating conversation...')
           conversationIdRef.current = await createConversation(tokenRef.current)
+          console.log('[Agentforce] Conversation created:', conversationIdRef.current)
           openSSE(tokenRef.current, conversationIdRef.current)
+          console.log('[Agentforce] SSE stream opened')
           setIsConnecting(false)
         }
 
-        // Send the message
-        const res = await fetch(
-          `${CONVERSATION_ENDPOINT}/${conversationIdRef.current}/message?clientName=${CLIENT_NAME}`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${tokenRef.current}`,
-            },
-            body: JSON.stringify({
-              id: userMsg.id,
-              messageType: 'StaticContentMessage',
-              staticContent: { formatType: 'Text', text },
-            }),
+        // Send the message (v2 format)
+        const sendUrl = `${SCRT2_BASE}/iamessage/api/v2/conversation/${conversationIdRef.current}/message`
+        const res = await fetch(sendUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${tokenRef.current}`,
+            'X-Org-Id': config.orgId,
           },
-        )
+          body: JSON.stringify({
+            message: {
+              text,
+            },
+          }),
+        })
 
         if (!res.ok) {
-          throw new Error(`Send failed (${res.status})`)
+          const errText = await res.text().catch(() => '')
+          throw new Error(`Send failed (${res.status}) ${errText}`)
         }
+        console.log('[Agentforce] Message sent successfully')
       } catch (err) {
-        console.warn('[Agentforce] Connection pending — agent endpoint not reachable from this environment:', err.message)
+        console.warn('[Agentforce] Error:', err.message)
         setIsTyping(false)
         setIsConnecting(false)
         setError(err.message)
 
-        // Graceful fallback — demo-friendly message (no alarming error popup)
+        // Graceful fallback — demo-friendly message
         setMessages((prev) => [
           ...prev,
           {

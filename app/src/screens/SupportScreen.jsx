@@ -1,45 +1,62 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { pushD360Event } from '../components/D360Panel'
+import AgentforceChat from '../components/AgentforceChat'
 
 export default function SupportScreen() {
-  const [sdkReady, setSdkReady] = useState(false)
-  const [chatLaunched, setChatLaunched] = useState(false)
-
-  // Listen for the SDK's button-created event (signals readiness)
-  useEffect(() => {
-    function onReady() {
-      setSdkReady(true)
-    }
-    window.addEventListener('onEmbeddedMessagingReady', onReady)
-    window.addEventListener('onEmbeddedMessagingButtonCreated', onReady)
-    // Also check if already ready
-    if (window.embeddedservice_bootstrap?.utilAPI) {
-      setSdkReady(true)
-    }
-    return () => {
-      window.removeEventListener('onEmbeddedMessagingReady', onReady)
-      window.removeEventListener('onEmbeddedMessagingButtonCreated', onReady)
-    }
-  }, [])
+  const [chatOpen, setChatOpen] = useState(false)
 
   function handleLaunchChat() {
     pushD360Event('AI Chat Launch', 'click')
-    setChatLaunched(true)
-
-    const launch = () => {
-      if (window.embeddedservice_bootstrap?.utilAPI?.launchChat) {
-        window.embeddedservice_bootstrap.utilAPI
-          .launchChat()
-          .then(() => console.log('[Agentforce] Chat launched'))
-          .catch((err) => console.warn('[Agentforce] Chat launch error:', err))
-      } else {
-        console.warn('[Agentforce] SDK not ready — retrying in 1s')
-        setTimeout(launch, 1000)
-      }
-    }
-    launch()
+    setChatOpen(true)
   }
 
+  function handleCloseChat() {
+    pushD360Event('AI Chat Close', 'click')
+    setChatOpen(false)
+  }
+
+  // When chat is open, show the inline chat filling the screen area
+  if (chatOpen) {
+    return (
+      <div className="flex flex-col bg-[#f5f8fa]" style={{ height: '100%' }}>
+        {/* Chat header */}
+        <div
+          className="px-4 py-3 flex items-center gap-3"
+          style={{ background: 'linear-gradient(135deg, #1a8b91, #2dc8ce)' }}
+        >
+          <button
+            onClick={handleCloseChat}
+            className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <div className="flex items-center gap-2.5 flex-1">
+            <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" />
+              </svg>
+            </div>
+            <div>
+              <p className="font-bold text-white text-[15px]">AI Support Assistant</p>
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-300" />
+                <p className="text-white/80 text-[11px]">Powered by Agentforce</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Inline chat component — fills remaining space */}
+        <div className="flex-1 min-h-0">
+          <AgentforceChat isInline />
+        </div>
+      </div>
+    )
+  }
+
+  // Default view: support options
   return (
     <div className="bg-[#f5f8fa] pb-6 screen-enter">
       {/* Header */}
@@ -84,12 +101,6 @@ export default function SupportScreen() {
             </div>
           </div>
         </button>
-
-        {chatLaunched && (
-          <div className="text-center text-[12px] text-gray-400 py-1">
-            Chat window opened — look for the Agentforce chat overlay
-          </div>
-        )}
 
         {/* Nurse specialist */}
         <div className="card px-4 py-4">

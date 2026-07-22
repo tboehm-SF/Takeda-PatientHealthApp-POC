@@ -7,6 +7,10 @@
  * In production, override via environment variables (VITE_ prefix for Vite).
  */
 
+// Use Netlify proxy in production to avoid CORS, direct URL in dev
+const isProduction = typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+const scrt2Direct = 'https://storm-ffbfcc9fa2ad3e.my.salesforce-scrt.com'
+
 const config = {
   orgId: import.meta.env.VITE_SF_ORG_ID || '00DHn000009hxPn',
   deploymentName:
@@ -14,10 +18,10 @@ const config = {
   siteURL:
     import.meta.env.VITE_SF_SITE_URL ||
     'https://storm-ffbfcc9fa2ad3e.my.site.com/ESWZasocitinibPatientSu1784554656094',
-  // SCRT2 endpoint allows all origins (CORS: *) — no proxy needed.
+  // Use proxy in production to avoid CORS; direct SCRT2 URL in dev
   scrt2URL:
     import.meta.env.VITE_SF_SCRT2_URL ||
-    'https://storm-ffbfcc9fa2ad3e.my.salesforce-scrt.com',
+    (isProduction ? '/api/scrt2' : scrt2Direct),
 }
 
 export default config
