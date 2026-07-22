@@ -16,38 +16,18 @@
     <script type="module" src="/src/main.jsx"></script>
 
     <!-- Salesforce Embedded Messaging SDK (Agentforce MIAW) -->
+    <style>
+      /* Hide the SDK's default floating chat button — our React UI triggers it */
+      #embeddedMessagingConversationButton,
+      .embeddedMessagingConversationButton,
+      .embeddedMessagingConversationButtonWrapper,
+      #embedded-messaging > .embeddedMessagingConversationButtonWrapper {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+      }
+    </style>
     <script>
-      // Hide the SDK's default floating button — our React UI controls visibility.
-      // The button is rendered inside an embedded-messaging shadow root; we use
-      // a MutationObserver to inject a <style> as soon as the container appears.
-      (function hideDefaultButton() {
-        var css = 'button.embeddedMessagingConversationButton { display: none !important; }';
-        function injectStyle(container) {
-          var root = container.shadowRoot;
-          if (!root) return;
-          if (root.querySelector('#esw-hide-btn')) return;
-          var s = document.createElement('style');
-          s.id = 'esw-hide-btn';
-          s.textContent = css;
-          root.appendChild(s);
-        }
-        // Also hide via top-level CSS for the container itself
-        var topStyle = document.createElement('style');
-        topStyle.textContent = '.embeddedMessagingFrame { display: none !important; }';
-        document.head.appendChild(topStyle);
-
-        var mo = new MutationObserver(function (mutations) {
-          mutations.forEach(function (m) {
-            m.addedNodes.forEach(function (n) {
-              if (n.nodeType === 1 && n.classList && n.classList.contains('embeddedMessagingConversationButton')) {
-                n.style.display = 'none';
-              }
-              if (n.shadowRoot) injectStyle(n);
-            });
-          });
-        });
-        mo.observe(document.body, { childList: true, subtree: true });
-      })();
 
       // Initialize the SDK once the script loads
       function initEmbeddedMessaging() {

@@ -26,37 +26,18 @@ export default function SupportScreen() {
     pushD360Event('AI Chat Launch', 'click')
     setChatLaunched(true)
 
-    if (window.embeddedservice_bootstrap?.utilAPI?.launchChat) {
-      window.embeddedservice_bootstrap.utilAPI
-        .launchChat()
-        .then(() => console.log('[Agentforce] Chat launched'))
-        .catch((err) => {
-          console.warn('[Agentforce] Chat launch error:', err)
-          // Show the SDK container if it was hidden
-          const frame = document.querySelector('.embeddedMessagingFrame')
-          if (frame) frame.style.display = ''
-        })
-    } else {
-      console.warn('[Agentforce] SDK not ready yet — retrying in 1s')
-      setTimeout(() => {
-        if (window.embeddedservice_bootstrap?.utilAPI?.launchChat) {
-          window.embeddedservice_bootstrap.utilAPI.launchChat()
-            .catch((err) => console.warn('[Agentforce] Retry failed:', err))
-        }
-      }, 1000)
+    const launch = () => {
+      if (window.embeddedservice_bootstrap?.utilAPI?.launchChat) {
+        window.embeddedservice_bootstrap.utilAPI
+          .launchChat()
+          .then(() => console.log('[Agentforce] Chat launched'))
+          .catch((err) => console.warn('[Agentforce] Chat launch error:', err))
+      } else {
+        console.warn('[Agentforce] SDK not ready — retrying in 1s')
+        setTimeout(launch, 1000)
+      }
     }
-
-    // Show the SDK frame container
-    const frame = document.querySelector('.embeddedMessagingFrame')
-    if (frame) frame.style.display = ''
-    // Also un-hide via the top-level style we injected
-    const hideStyle = document.querySelector('style')
-    if (hideStyle && hideStyle.textContent.includes('.embeddedMessagingFrame')) {
-      hideStyle.textContent = hideStyle.textContent.replace(
-        '.embeddedMessagingFrame { display: none !important; }',
-        ''
-      )
-    }
+    launch()
   }
 
   return (
