@@ -13,8 +13,10 @@ import { pushD360Event } from '../components/D360Panel'
  *   4.  Send user messages and surface agent responses in real time
  */
 
-const TOKEN_ENDPOINT = `${config.scrt2URL}/iamessage/api/v2/authorization/unauthenticated/access-token`
-const CONVERSATION_ENDPOINT = `${config.scrt2URL}/iamessage/api/v2/conversation`
+// Use the v1 SCRT2 endpoints (compatible with Web-type deployments)
+const CLIENT_NAME = 'Web_v1'
+const TOKEN_ENDPOINT = `${config.scrt2URL}/iamessage/v1/authorization/unauthenticated/accessToken?clientName=${CLIENT_NAME}`
+const CONVERSATION_ENDPOINT = `${config.scrt2URL}/iamessage/v1/conversation`
 
 export default function useAgentforceChat() {
   const [messages, setMessages] = useState([
@@ -42,8 +44,8 @@ export default function useAgentforceChat() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         orgId: config.orgId,
-        esDeveloperName: config.deploymentName,
-        capabilitiesVersion: '1',
+        developerName: config.deploymentName,
+        capabilitiesVersion: '260',
       }),
     })
     if (!res.ok) throw new Error(`Token request failed: ${res.status}`)
@@ -52,14 +54,13 @@ export default function useAgentforceChat() {
   }
 
   async function createConversation(token) {
-    const res = await fetch(CONVERSATION_ENDPOINT, {
+    const res = await fetch(`${CONVERSATION_ENDPOINT}?clientName=${CLIENT_NAME}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
-        'X-Org-Id': config.orgId,
       },
-      body: JSON.stringify({ routingType: 'agent' }),
+      body: JSON.stringify({}),
     })
     if (!res.ok) throw new Error(`Conversation creation failed: ${res.status}`)
     const data = await res.json()
@@ -67,7 +68,7 @@ export default function useAgentforceChat() {
   }
 
   function openSSE(token, conversationId) {
-    const url = `${config.scrt2URL}/iamessage/api/v2/conversation/${conversationId}/events?accessToken=${encodeURIComponent(token)}`
+    const url = `${config.scrt2URL}/iamessage/v1/conversation/${conversationId}/events?accessToken=${encodeURIComponent(token)}&clientName=${CLIENT_NAME}`
     const source = new EventSource(url)
 
     source.addEventListener('CONVERSATION_MESSAGE', (e) => {
@@ -154,20 +155,17 @@ export default function useAgentforceChat() {
 
         // Send the message
         const res = await fetch(
-          `${CONVERSATION_ENDPOINT}/${conversationIdRef.current}/message`,
+          `${CONVERSATION_ENDPOINT}/${conversationIdRef.current}/message?clientName=${CLIENT_NAME}`,
           {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${tokenRef.current}`,
-              'X-Org-Id': config.orgId,
             },
             body: JSON.stringify({
-              message: {
-                id: userMsg.id,
-                messageType: 'StaticContentMessage',
-                staticContent: { formatType: 'Text', text },
-              },
+              id: userMsg.id,
+              messageType: 'StaticContentMessage',
+              staticContent: { formatType: 'Text', text },
             }),
           },
         )
