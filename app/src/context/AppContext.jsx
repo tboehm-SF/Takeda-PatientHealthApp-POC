@@ -99,6 +99,9 @@ export function AppProvider({ children }) {
   // Locked at session start so NRS save and PsOdisk submit share the same upsert key
   const [checkInSessionTime] = useState(() => new Date().toISOString())
 
+  // Selected article for full-screen article detail view
+  const [selectedArticle, setSelectedArticle] = useState(null)
+
   // Syncing UI state
   const [syncingState, setSyncingState] = useState(null) // null | 'syncing' | 'personalising' | 'done'
 
@@ -168,6 +171,8 @@ export function AppProvider({ children }) {
         setNrsScore,
         psodiskScores,
         setPsodiskScores,
+        selectedArticle,
+        setSelectedArticle,
         syncingState,
         saveNrsScore,
         submitCheckIn,

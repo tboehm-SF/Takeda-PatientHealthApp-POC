@@ -1,12 +1,17 @@
 import { useState } from 'react'
 import { pushD360Event } from './D360Panel'
 
-export default function ContentCard({ item, size = 'default' }) {
+export default function ContentCard({ item, size = 'default', onArticleClick }) {
   const [saved, setSaved] = useState(false)
+
+  function handleClick() {
+    pushD360Event(`Article: ${item.title}`, 'click')
+    if (onArticleClick) onArticleClick(item)
+  }
 
   if (size === 'compact') {
     return (
-      <div className="card flex gap-3 p-3 cursor-pointer hover:shadow-md transition-shadow" onClick={() => pushD360Event(`Article: ${item.title}`, 'click')}>
+      <div className="card flex gap-3 p-3 cursor-pointer hover:shadow-md transition-shadow" onClick={handleClick}>
         <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${item.gradient} flex-shrink-0`} />
         <div className="flex-1 min-w-0">
           <span className={`pill ${item.tagColor} text-[10px] mb-1`}>{item.tag}</span>
@@ -18,7 +23,7 @@ export default function ContentCard({ item, size = 'default' }) {
   }
 
   return (
-    <div className="card overflow-hidden cursor-pointer hover:shadow-md transition-shadow flex-shrink-0" style={{ width: '200px' }} onClick={() => pushD360Event(`Article: ${item.title}`, 'click')}>
+    <div className="card overflow-hidden cursor-pointer hover:shadow-md transition-shadow flex-shrink-0" style={{ width: '200px' }} onClick={handleClick}>
       <div className={`h-24 bg-gradient-to-br ${item.gradient} relative`}>
         <div className="absolute top-2 left-2">
           <span className="pill bg-white/90 text-gray-700 text-[10px]">{item.tag}</span>

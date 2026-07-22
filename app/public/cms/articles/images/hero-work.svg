@@ -1,0 +1,166 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#c2410c"/>
+      <stop offset="50%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#ef4444"/>
+    </linearGradient>
+    <linearGradient id="skinTone" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8d6346"/>
+      <stop offset="100%" stop-color="#7a5539"/>
+    </linearGradient>
+    <linearGradient id="shirt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.25"/>
+    </linearGradient>
+    <linearGradient id="laptop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.2"/>
+    </linearGradient>
+    <linearGradient id="screenGlow" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#93c5fd" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#93c5fd" stop-opacity="0.1"/>
+    </linearGradient>
+    <linearGradient id="windowLight" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#fef3c7" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#fef3c7" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="400" fill="url(#bg)"/>
+  <circle cx="750" cy="60" r="200" fill="#ffffff" opacity="0.04"/>
+  <circle cx="50" cy="380" r="180" fill="#ffffff" opacity="0.03"/>
+
+  <!-- Window (right side — light source) -->
+  <g>
+    <rect x="600" y="30" width="170" height="240" rx="6" fill="#ffffff" opacity="0.1"/>
+    <rect x="605" y="35" width="160" height="230" rx="4" fill="#fef3c7" opacity="0.15"/>
+    <!-- Panes -->
+    <line x1="685" y1="35" x2="685" y2="265" stroke="#ffffff" stroke-width="1.5" opacity="0.12"/>
+    <line x1="605" y1="150" x2="765" y2="150" stroke="#ffffff" stroke-width="1.5" opacity="0.12"/>
+    <!-- Sunlight rays -->
+    <polygon points="605,35 350,200 400,250 685,50" fill="#fef3c7" opacity="0.06"/>
+    <polygon points="605,150 420,280 460,300 685,170" fill="#fef3c7" opacity="0.04"/>
+  </g>
+
+  <!-- Desk -->
+  <rect x="120" y="260" width="500" height="10" rx="3" fill="#ffffff" opacity="0.12"/>
+  <!-- Desk legs -->
+  <rect x="140" y="270" width="8" height="90" rx="2" fill="#ffffff" opacity="0.06"/>
+  <rect x="600" y="270" width="8" height="90" rx="2" fill="#ffffff" opacity="0.06"/>
+
+  <!-- Laptop on desk -->
+  <g transform="translate(320, 225)">
+    <!-- Screen -->
+    <path d="M-80 -70 L80 -70 L75 0 L-75 0Z" fill="url(#laptop)"/>
+    <path d="M-72 -65 L72 -65 L68 -5 L-68 -5Z" fill="url(#screenGlow)"/>
+    <!-- Screen content lines -->
+    <g opacity="0.15">
+      <rect x="-55" y="-55" width="60" height="3" rx="1" fill="#ffffff"/>
+      <rect x="-55" y="-45" width="80" height="3" rx="1" fill="#ffffff"/>
+      <rect x="-55" y="-35" width="45" height="3" rx="1" fill="#ffffff"/>
+      <rect x="-55" y="-20" width="70" height="3" rx="1" fill="#ffffff"/>
+      <rect x="-55" y="-10" width="55" height="3" rx="1" fill="#ffffff"/>
+    </g>
+    <!-- Keyboard base -->
+    <path d="M-85 0 L85 0 L95 15 L-95 15Z" fill="#ffffff" opacity="0.15"/>
+    <!-- Keyboard keys -->
+    <g opacity="0.08">
+      <rect x="-70" y="3" width="140" height="8" rx="1" fill="#ffffff"/>
+    </g>
+  </g>
+
+  <!-- Coffee cup -->
+  <g transform="translate(500, 240)" filter="shadow">
+    <rect x="-12" y="-5" width="24" height="25" rx="3" fill="#ffffff" opacity="0.3"/>
+    <!-- Handle -->
+    <path d="M12 0 Q22 0 22 10 Q22 20 12 18" stroke="#ffffff" stroke-width="2" fill="none" opacity="0.25"/>
+    <!-- Coffee surface -->
+    <ellipse cx="0" cy="-3" rx="10" ry="4" fill="#92400e" opacity="0.3"/>
+    <!-- Steam -->
+    <path d="M-4 -12 Q-6 -22 -2 -28" stroke="#ffffff" stroke-width="1" opacity="0.15" fill="none"/>
+    <path d="M4 -14 Q6 -24 3 -30" stroke="#ffffff" stroke-width="1" opacity="0.12" fill="none"/>
+  </g>
+
+  <!-- Person sitting at desk -->
+  <g transform="translate(300, 130)">
+    <!-- Chair back (visible behind person) -->
+    <path d="M-45 80 Q-50 40 -45 20 Q-40 0 -30 -5 Q30 -5 40 0 Q50 20 45 80" stroke="#ffffff" stroke-width="3" fill="none" opacity="0.07"/>
+
+    <!-- Torso (button-up shirt) -->
+    <path d="M-35 30 Q-40 5 -20 -10 Q-5 -18 10 -10 Q30 5 25 30 Q22 70 0 85 Q-22 70 -35 30Z" fill="url(#shirt)"/>
+    <!-- Shirt collar -->
+    <path d="M-12 -8 Q-5 0 0 -5 Q5 0 12 -8" stroke="#ffffff" stroke-width="1" opacity="0.15" fill="none"/>
+    <!-- Shirt buttons -->
+    <circle cx="0" cy="5" r="1.5" fill="#ffffff" opacity="0.15"/>
+    <circle cx="0" cy="20" r="1.5" fill="#ffffff" opacity="0.12"/>
+    <circle cx="0" cy="35" r="1.5" fill="#ffffff" opacity="0.1"/>
+
+    <!-- Head -->
+    <circle cx="0" cy="-40" r="28" fill="url(#skinTone)"/>
+    <!-- Hair (short professional cut) -->
+    <path d="M-28 -45 Q-30 -72 -12 -72 Q0 -73 12 -72 Q28 -70 28 -48 Q29 -58 20 -63 Q8 -68 0 -68 Q-12 -68 -22 -60 Q-28 -54 -28 -45Z" fill="#1a1a2e"/>
+    <!-- Eyes (focused on screen) -->
+    <circle cx="-10" cy="-42" r="3" fill="#1a1a2e"/>
+    <circle cx="10" cy="-42" r="3" fill="#1a1a2e"/>
+    <circle cx="-9" cy="-42.5" r="1.2" fill="#ffffff"/>
+    <circle cx="11" cy="-42.5" r="1.2" fill="#ffffff"/>
+    <!-- Eyebrows -->
+    <path d="M-16 -49 Q-10 -51 -5 -49" stroke="#1a1a2e" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <path d="M5 -49 Q10 -51 16 -49" stroke="#1a1a2e" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <!-- Focused but calm expression -->
+    <path d="M-5 -32 Q0 -29 5 -32" stroke="#6b4c3b" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    <!-- Glasses (professional look) -->
+    <circle cx="-10" cy="-42" r="10" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.2"/>
+    <circle cx="10" cy="-42" r="10" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.2"/>
+    <line x1="0" y1="-42" x2="0" y2="-42" stroke="#ffffff" stroke-width="1" opacity="0.15"/>
+
+    <!-- Arms on keyboard -->
+    <path d="M-30 25 Q-50 45 -55 70 Q-58 85 -40 95" stroke="url(#skinTone)" stroke-width="12" fill="none" stroke-linecap="round"/>
+    <path d="M22 25 Q40 45 50 70 Q55 85 60 95" stroke="url(#skinTone)" stroke-width="12" fill="none" stroke-linecap="round"/>
+    <!-- Hands -->
+    <circle cx="-40" cy="95" r="7" fill="url(#skinTone)"/>
+    <circle cx="60" cy="95" r="7" fill="url(#skinTone)"/>
+  </g>
+
+  <!-- Rising chart line motif (top left area) -->
+  <g transform="translate(80, 100)" opacity="0.2">
+    <polyline points="0,60 30,50 60,55 90,35 120,30 150,15 180,5" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Arrow at end -->
+    <polygon points="178,0 185,5 178,10" fill="#ffffff"/>
+    <!-- Data points -->
+    <circle cx="0" cy="60" r="3" fill="#ffffff" opacity="0.5"/>
+    <circle cx="60" cy="55" r="3" fill="#ffffff" opacity="0.5"/>
+    <circle cx="120" cy="30" r="3" fill="#ffffff" opacity="0.5"/>
+    <circle cx="180" cy="5" r="3" fill="#ffffff" opacity="0.5"/>
+  </g>
+
+  <!-- Energy bolt -->
+  <g transform="translate(130, 280)" opacity="0.2">
+    <polygon points="0,-18 8,-5 2,-5 10,18 -2,2 4,2" fill="#fef3c7"/>
+  </g>
+
+  <!-- Clock motif -->
+  <g transform="translate(700, 300)" opacity="0.15">
+    <circle r="18" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+    <line x1="0" y1="0" x2="0" y2="-12" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="0" y1="0" x2="8" y2="5" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- Hour marks -->
+    <line x1="0" y1="-16" x2="0" y2="-14" stroke="#ffffff" stroke-width="1" opacity="0.5"/>
+    <line x1="16" y1="0" x2="14" y2="0" stroke="#ffffff" stroke-width="1" opacity="0.5"/>
+    <line x1="0" y1="16" x2="0" y2="14" stroke="#ffffff" stroke-width="1" opacity="0.5"/>
+    <line x1="-16" y1="0" x2="-14" y2="0" stroke="#ffffff" stroke-width="1" opacity="0.5"/>
+  </g>
+
+  <!-- Floating particles -->
+  <circle cx="550" cy="120" r="2" fill="#fef3c7" opacity="0.2"/>
+  <circle cx="580" cy="180" r="1.5" fill="#fef3c7" opacity="0.15"/>
+  <circle cx="200" cy="200" r="3" fill="#ffffff" opacity="0.1"/>
+
+  <!-- Bottom wave -->
+  <path d="M0 375 Q200 360 400 375 Q600 390 800 370 L800 400 L0 400Z" fill="#ffffff" opacity="0.04"/>
+</svg>

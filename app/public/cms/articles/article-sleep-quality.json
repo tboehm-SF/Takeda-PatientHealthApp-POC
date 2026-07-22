@@ -1,0 +1,56 @@
+{
+  "contentType": "zasocitinib_article",
+  "title": "Psoriasis and Sleep: Why Nights Can Be Hard",
+  "urlName": "psoriasis-and-sleep",
+  "contentBody": {
+    "title": {
+      "value": "Psoriasis and Sleep: Why Nights Can Be Hard",
+      "type": "text"
+    },
+    "summary": {
+      "value": "If psoriasis is disrupting your sleep, you're far from alone. Understanding the link between skin inflammation and sleep is the first step toward better nights.",
+      "type": "text"
+    },
+    "heroImage": {
+      "value": "/cms/articles/images/hero-sleep.svg",
+      "type": "image",
+      "altText": "Sleep and night sky illustration with crescent moon and stars on indigo-blue gradient"
+    },
+    "body": {
+      "value": "<h2>Why psoriasis and sleep don't always get along</h2><p>If you find yourself lying awake at night with your skin itching and your mind restless, you are not unusual. Research suggests that <strong>between 40 and 80% of people with psoriasis</strong> experience significant sleep disruption — making it one of the most commonly reported effects of the condition on daily life.</p><p>Nocturnal itch tends to intensify at night for two main reasons: the natural drop in body temperature triggers an increase in skin blood flow heightening itch signals; and reduced distraction in a quiet, dark room means the brain processes itch more intensely.</p><h2>The sleep-inflammation cycle</h2><p>Poor sleep elevates cortisol (your stress hormone), and elevated cortisol can increase systemic inflammation — which in turn can worsen your psoriasis and intensify itch the following night. Even small, consistent improvements to sleep quality can have a meaningful knock-on effect on how you feel during the day.</p><h2>Practical steps for better sleep</h2><ul><li><strong>Keep your bedroom cool</strong> — a room temperature of around 16–18°C supports deeper sleep and reduces night-time itch triggers.</li><li><strong>Choose breathable bedding</strong> — 100% cotton or bamboo sheets are gentle on skin and don't trap heat.</li><li><strong>Apply moisturiser before bed</strong> — a thick, fragrance-free emollient can reduce overnight skin drying.</li><li><strong>Shower in cool or lukewarm water</strong> — a cool shower before bed lowers body temperature and can calm itch.</li><li><strong>Limit alcohol and caffeine</strong> — both disturb sleep quality and alcohol is a recognised psoriasis trigger.</li><li><strong>Maintain a consistent sleep schedule</strong> — going to bed and waking at the same time strengthens your circadian rhythm.</li><li><strong>Reduce screen time before bed</strong> — blue light delays melatonin release.</li></ul><h2>When to mention it to your care team</h2><p>If your sleep is significantly disrupted several nights a week, it's worth raising with your dermatologist or GP. Cognitive Behavioural Therapy for Insomnia (CBT-I) has a strong evidence base and is increasingly available.</p><p><em>This content is for educational purposes only and is not a substitute for personalised advice from your healthcare team.</em></p>",
+      "type": "richtext"
+    },
+    "category": {
+      "value": "Lifestyle",
+      "type": "text"
+    },
+    "tag": {
+      "value": "Sleep",
+      "type": "text"
+    },
+    "tagColor": {
+      "value": "bg-indigo-100 text-indigo-700",
+      "type": "text"
+    },
+    "gradient": {
+      "value": "from-indigo-500 to-blue-800",
+      "type": "text"
+    },
+    "readTime": {
+      "value": "5 min",
+      "type": "text"
+    },
+    "psodiskDomains": {
+      "value": "sleep",
+      "type": "text"
+    },
+    "nrsMin": {
+      "value": null,
+      "type": "number"
+    },
+    "nrsMax": {
+      "value": null,
+      "type": "number"
+    }
+  }
+}

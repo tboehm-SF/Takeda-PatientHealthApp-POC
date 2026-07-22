@@ -1,14 +1,55 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { pushD360Event } from '../components/D360Panel'
-import { getForYouNow, contentLibrary, categories, personalise } from '../data/contentLibrary'
+import { getForYouNow, contentLibrary, categories, personalise, getAnonymousRecommendations, domainArticleMap } from '../data/contentLibrary'
 import ContentCard from '../components/ContentCard'
 
+// Domain display metadata for the anonymous recommendation cards
+const DOMAIN_META = {
+  itch: { icon: '🌡', label: 'Itch Intensity', color: 'from-orange-400 to-amber-500', tagColor: 'bg-orange-100 text-orange-700' },
+  sleep: { icon: '🌙', label: 'Sleep Quality', color: 'from-indigo-500 to-blue-800', tagColor: 'bg-indigo-100 text-indigo-700' },
+  emotional: { icon: '💜', label: 'Emotional Wellbeing', color: 'from-purple-400 to-pink-500', tagColor: 'bg-purple-100 text-purple-700' },
+  work: { icon: '💼', label: 'Work & Productivity', color: 'from-orange-400 to-red-500', tagColor: 'bg-orange-100 text-orange-700' },
+}
+
 export default function EducationHub() {
-  const { nrsScore, psodiskScores, patient, checkInSubmitted, setCurrentScreen } = useApp()
+  const { nrsScore, psodiskScores, patient, profile, checkInSubmitted, setCurrentScreen, setSelectedArticle } = useApp()
   const [activeCategory, setActiveCategory] = useState(null)
+  const [articleCache, setArticleCache] = useState({})
+
+  const isAnonymous = !profile.email || !profile.emailConsent
 
   const forYouNow = getForYouNow(nrsScore, psodiskScores, patient.weekOnTherapy)
+  const anonRecos = isAnonymous ? getAnonymousRecommendations(nrsScore, psodiskScores) : []
+
+  // Prefetch article JSONs for anonymous recommendations
+  useEffect(() => {
+    if (!isAnonymous || anonRecos.length === 0) return
+    anonRecos.forEach((reco) => {
+      if (articleCache[reco.articleSlug]) return
+      fetch(`/cms/articles/${reco.articleSlug}.json`)
+        .then((r) => r.json())
+        .then((data) => setArticleCache((prev) => ({ ...prev, [reco.articleSlug]: data })))
+        .catch(() => {})
+    })
+  }, [isAnonymous, anonRecos.length])
+
+  function openArticle(articleSlug) {
+    const article = articleCache[articleSlug]
+    if (article) {
+      pushD360Event(`Open Article: ${article.title}`, 'engagement', { domain: articleSlug })
+      setSelectedArticle(article)
+      setCurrentScreen('article')
+    }
+  }
+
+  function handleContentCardClick(item) {
+    // Check if this content library item maps to a full article
+    const trigger = item.triggers
+    if (trigger?.psodiskDomain && domainArticleMap[trigger.psodiskDomain]) {
+      openArticle(domainArticleMap[trigger.psodiskDomain])
+    }
+  }
 
   const filteredContent = activeCategory
     ? contentLibrary.filter((c) => c.category === activeCategory)
@@ -48,7 +89,72 @@ export default function EducationHub() {
       </div>
 
       <div className="px-4 pt-4 space-y-5">
-        {/* For You Now */}
+        {/* ── Anonymous-only: Personalized Article Recommendations ── */}
+        {isAnonymous && (
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h2 className="font-bold text-gray-900 text-[16px]">
+                  Recommended For You
+                </h2>
+                {checkInSubmitted ? (
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                    <p className="text-[11px] text-primary font-semibold">
+                      Personalised based on your NRS {nrsScore}/10 + PsOdisk scores
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-gray-400 mt-0.5">
+                    Complete today's check-in to personalise
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Domain-ranked article recommendation cards */}
+            <div className="space-y-2.5">
+              {anonRecos.slice(0, 4).map((reco, i) => {
+                const meta = DOMAIN_META[reco.domain]
+                const article = articleCache[reco.articleSlug]
+                const title = article?.contentBody?.title?.value ?? article?.title ?? `${meta.label} article`
+                const summary = article?.contentBody?.summary?.value ?? ''
+                const readTime = article?.contentBody?.readTime?.value ?? '5 min'
+
+                return (
+                  <div
+                    key={reco.domain}
+                    className="card overflow-hidden cursor-pointer hover:shadow-md transition-all fade-in"
+                    style={{ animationDelay: `${i * 0.1}s` }}
+                    onClick={() => openArticle(reco.articleSlug)}
+                  >
+                    <div className="flex gap-0">
+                      {/* Gradient sidebar */}
+                      <div className={`w-1.5 bg-gradient-to-b ${meta.color} flex-shrink-0`} />
+                      <div className="flex-1 p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[14px]">{meta.icon}</span>
+                          <span className={`pill ${meta.tagColor} text-[10px]`}>{meta.label}</span>
+                          {i === 0 && checkInSubmitted && (
+                            <span className="pill bg-primary-light text-primary text-[9px] font-bold">TOP MATCH</span>
+                          )}
+                        </div>
+                        <p className="font-semibold text-[13px] text-gray-900 leading-tight line-clamp-2">{title}</p>
+                        {summary && <p className="text-[11px] text-gray-400 mt-0.5 line-clamp-1">{summary}</p>}
+                        <div className="flex items-center justify-between mt-1.5">
+                          <span className="text-[10px] text-gray-300">{readTime} read</span>
+                          <span className="text-[10px] font-semibold text-primary">Read article →</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── For You Now (existing content library personalization) ── */}
         <div>
           <div className="flex items-center justify-between mb-3">
             <div>
@@ -78,7 +184,7 @@ export default function EducationHub() {
                 className="fade-in"
                 style={{ animationDelay: `${i * 0.08}s` }}
               >
-                <ContentCard item={item} size="default" />
+                <ContentCard item={item} size="default" onArticleClick={handleContentCardClick} />
               </div>
             ))}
           </div>
@@ -113,7 +219,7 @@ export default function EducationHub() {
           </h2>
           <div className="space-y-2">
             {filteredContent.map((item) => (
-              <ContentCard key={item.id} item={item} size="compact" />
+              <ContentCard key={item.id} item={item} size="compact" onArticleClick={handleContentCardClick} />
             ))}
           </div>
         </div>

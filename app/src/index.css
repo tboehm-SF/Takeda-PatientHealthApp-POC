@@ -680,6 +680,41 @@
     border: 1px solid rgba(250, 204, 21, 0.2);
   }
 
+  /* ── Article body HTML styles ────────────────────────────────── */
+  .article-body h2 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #111827;
+    margin: 20px 0 8px;
+  }
+  .article-body h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #374151;
+    margin: 16px 0 6px;
+  }
+  .article-body p {
+    margin: 0 0 12px;
+    line-height: 1.65;
+  }
+  .article-body ul {
+    padding-left: 18px;
+    margin: 0 0 14px;
+  }
+  .article-body li {
+    margin-bottom: 8px;
+    line-height: 1.55;
+    color: #374151;
+  }
+  .article-body strong {
+    font-weight: 600;
+    color: #111827;
+  }
+  .article-body em {
+    color: #6b7280;
+    font-size: 12px;
+  }
+
   /* Hide D360 + demo note + personas on screens narrower than the phone + panel */
   @media (max-width: 800px) {
     .d360-badge, .d360-panel, .demo-note, .demo-personas { display: none; }

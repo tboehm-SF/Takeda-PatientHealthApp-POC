@@ -1,7 +1,7 @@
 import { AppProvider, useApp } from './context/AppContext'
 import StatusBar from './components/StatusBar'
 import BottomNav from './components/BottomNav'
-import AgentforceChat from './components/AgentforceChat'
+
 import ProfileModal from './components/ProfileModal'
 import D360Panel from './components/D360Panel'
 import DemoPersonas from './components/DemoPersonas'
@@ -10,6 +10,7 @@ import DailyCheckIn from './screens/DailyCheckIn'
 import EducationHub from './screens/EducationHub'
 import ProgressTracker from './screens/ProgressTracker'
 import SupportScreen from './screens/SupportScreen'
+import ArticleDetail from './screens/ArticleDetail'
 import SyncingOverlay from './screens/SyncingOverlay'
 
 function PhoneApp() {
@@ -21,6 +22,7 @@ function PhoneApp() {
     education: EducationHub,
     progress: ProgressTracker,
     support: SupportScreen,
+    article: ArticleDetail,
   }
 
   const Screen = screens[currentScreen] || HomeScreen
@@ -38,14 +40,7 @@ function PhoneApp() {
           <Screen />
         </div>
 
-        {/* Agentforce floating chat (not shown on support screen — full chat there) */}
-        {currentScreen !== 'support' && (
-          <div className="relative">
-            <AgentforceChat />
-          </div>
-        )}
-
-        <BottomNav />
+        {currentScreen !== 'article' && <BottomNav />}
 
         {/* Profile modal — rendered inside phone-screen so it clips to the frame */}
         {profileOpen && <ProfileModal onClose={() => setProfileOpen(false)} />}

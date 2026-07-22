@@ -1,18 +1,57 @@
+import { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { pushD360Event } from '../components/D360Panel'
 import { nrsHistory } from '../data/mockData'
-import { getForYouNow } from '../data/contentLibrary'
+import { getForYouNow, getAnonymousRecommendations, domainArticleMap } from '../data/contentLibrary'
 import ContentCard from '../components/ContentCard'
 import { LineChart, Line, ResponsiveContainer } from 'recharts'
+
+// Domain display metadata (same as EducationHub)
+const DOMAIN_META = {
+  itch: { icon: '🌡', label: 'Itch Intensity', color: 'from-orange-400 to-amber-500', tagColor: 'bg-orange-100 text-orange-700' },
+  sleep: { icon: '🌙', label: 'Sleep Quality', color: 'from-indigo-500 to-blue-800', tagColor: 'bg-indigo-100 text-indigo-700' },
+  emotional: { icon: '💜', label: 'Emotional Wellbeing', color: 'from-purple-400 to-pink-500', tagColor: 'bg-purple-100 text-purple-700' },
+  work: { icon: '💼', label: 'Work & Productivity', color: 'from-orange-400 to-red-500', tagColor: 'bg-orange-100 text-orange-700' },
+}
 
 const STAGE_STEPS = ['Start', 'Wk 1', 'Wk 4', 'Wk 8', 'Wk 12', 'Wk 16', 'Wk 16+']
 
 const cetDate = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Paris' }).format(new Date())
 
 export default function HomeScreen() {
-  const { patient, profile, setProfileOpen, todayDoseConfirmed, confirmDose, nrsScore, psodiskScores, checkInSubmitted, setCurrentScreen } = useApp()
+  const { patient, profile, setProfileOpen, todayDoseConfirmed, confirmDose, nrsScore, psodiskScores, checkInSubmitted, setCurrentScreen, setSelectedArticle } = useApp()
+  const [articleCache, setArticleCache] = useState({})
 
+  const isAnonymous = !profile.email || !profile.emailConsent
+  const anonRecos = isAnonymous ? getAnonymousRecommendations(nrsScore, psodiskScores) : []
   const forYouNow = getForYouNow(nrsScore, psodiskScores, patient.weekOnTherapy).slice(0, 2)
+
+  // Prefetch top article JSON for anonymous recommendation
+  useEffect(() => {
+    if (!isAnonymous || anonRecos.length === 0) return
+    const topSlug = anonRecos[0].articleSlug
+    if (articleCache[topSlug]) return
+    fetch(`/cms/articles/${topSlug}.json`)
+      .then((r) => r.json())
+      .then((data) => setArticleCache((prev) => ({ ...prev, [topSlug]: data })))
+      .catch(() => {})
+  }, [isAnonymous, anonRecos.length > 0 ? anonRecos[0].domain : null])
+
+  function openArticle(articleSlug) {
+    const article = articleCache[articleSlug]
+    if (article) {
+      pushD360Event(`Open Article: ${article.title}`, 'engagement', { domain: articleSlug })
+      setSelectedArticle(article)
+      setCurrentScreen('article')
+    }
+  }
+
+  function handleContentCardClick(item) {
+    const trigger = item.triggers
+    if (trigger?.psodiskDomain && domainArticleMap[trigger.psodiskDomain]) {
+      openArticle(domainArticleMap[trigger.psodiskDomain])
+    }
+  }
 
   const chartData = nrsHistory.map((d) => ({ ...d, value: d.value ?? nrsScore })).filter((d) => d.value !== null)
 
@@ -183,9 +222,41 @@ export default function HomeScreen() {
             </h2>
             <button onClick={() => { pushD360Event('See All Articles Tap', 'click'); setCurrentScreen('education') }} className="text-[12px] font-semibold text-primary">See all</button>
           </div>
+
+          {/* Anonymous-only: top article recommendation card */}
+          {isAnonymous && anonRecos.length > 0 && (() => {
+            const topReco = anonRecos[0]
+            const meta = DOMAIN_META[topReco.domain]
+            const article = articleCache[topReco.articleSlug]
+            const title = article?.contentBody?.title?.value ?? `${meta.label} article`
+            const summary = article?.contentBody?.summary?.value ?? ''
+            return (
+              <div
+                className="card overflow-hidden cursor-pointer hover:shadow-md transition-all mb-2 fade-in"
+                onClick={() => openArticle(topReco.articleSlug)}
+              >
+                <div className="flex gap-0">
+                  <div className={`w-1.5 bg-gradient-to-b ${meta.color} flex-shrink-0`} />
+                  <div className="flex-1 p-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[14px]">{meta.icon}</span>
+                      <span className={`pill ${meta.tagColor} text-[10px]`}>{meta.label}</span>
+                      {checkInSubmitted && (
+                        <span className="pill bg-primary-light text-primary text-[9px] font-bold">PERSONALISED</span>
+                      )}
+                    </div>
+                    <p className="font-semibold text-[13px] text-gray-900 leading-tight">{title}</p>
+                    {summary && <p className="text-[11px] text-gray-400 mt-0.5 line-clamp-1">{summary}</p>}
+                    <span className="text-[10px] font-semibold text-primary mt-1 inline-block">Read article →</span>
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
+
           <div className="space-y-2">
             {forYouNow.map((item) => (
-              <ContentCard key={item.id} item={item} size="compact" />
+              <ContentCard key={item.id} item={item} size="compact" onArticleClick={handleContentCardClick} />
             ))}
           </div>
         </div>

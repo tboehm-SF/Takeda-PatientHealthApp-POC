@@ -237,6 +237,53 @@ export function getForYouNow(nrs, psodisk, weekOnTherapy) {
   return personalise(nrs, psodisk, weekOnTherapy).slice(0, 4)
 }
 
+// ─── Domain → article JSON mapping (for full-article detail views) ────────────
+// Maps PsOdisk domains to their article file names under /cms/articles/
+export const domainArticleMap = {
+  itch: 'article-itch-relief',
+  sleep: 'article-sleep-quality',
+  emotional: 'article-emotional-wellbeing',
+  work: 'article-work-productivity',
+}
+
+// The 4 personalization domains we compare
+const RECO_DOMAINS = ['itch', 'sleep', 'emotional', 'work']
+
+/**
+ * getAnonymousRecommendations(nrsScore, psodiskScores)
+ *
+ * Returns an ordered list of domain keys ranked by highest PsOdisk domain
+ * score (worst-affected area first). Used for anonymous-only content zone
+ * personalization in the Education Hub and Home Screen.
+ *
+ * Each returned item includes the domain key, score, and article file slug.
+ * The itch domain gets an NRS boost: if NRS ≥ 7, itch score is boosted by
+ * +2 to account for the NRS signal.
+ */
+export function getAnonymousRecommendations(nrsScore, psodiskScores) {
+  if (!psodiskScores) return []
+
+  const ranked = RECO_DOMAINS.map((domain) => {
+    let score = psodiskScores[domain] ?? 0
+
+    // NRS tiebreaker: if NRS ≥ 7, boost itch domain by 2
+    if (domain === 'itch' && nrsScore >= 7) {
+      score += 2
+    }
+
+    return {
+      domain,
+      score,
+      articleSlug: domainArticleMap[domain],
+    }
+  })
+
+  // Sort descending — highest score (worst affected) first
+  ranked.sort((a, b) => b.score - a.score)
+
+  return ranked
+}
+
 export const categories = [
   { label: 'Itch Management', gradient: 'from-orange-400 to-amber-500', icon: '🌡' },
   { label: 'About Zasocitinib', gradient: 'from-teal-400 to-primary-dark', icon: '💊' },

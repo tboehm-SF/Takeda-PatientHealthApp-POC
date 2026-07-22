@@ -56,78 +56,9 @@ export default function AgentforceChat({ isFullScreen = false, isInline = false,
     )
   }
 
-  return (
-    <>
-      {/* Floating bubble */}
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="absolute bottom-20 right-4 z-40 w-14 h-14 rounded-full shadow-lg flex items-center justify-center pulse-ring"
-          style={{ background: 'linear-gradient(135deg, #1a8b91, #2dc8ce)' }}
-        >
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z"
-              fill="white"
-            />
-          </svg>
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-400 rounded-full border-2 border-white text-white text-[8px] flex items-center justify-center font-bold">
-            1
-          </span>
-        </button>
-      )}
-
-      {/* Inline chat panel */}
-      {isOpen && (
-        <div
-          className="absolute bottom-16 right-3 left-3 z-40 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
-          style={{ maxHeight: '420px' }}
-        >
-          <div
-            className="flex items-center gap-2 px-4 py-3 border-b border-gray-100"
-            style={{ background: 'linear-gradient(135deg, #1a8b91, #2dc8ce)' }}
-          >
-            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
-                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-white font-semibold text-sm">AI Support</p>
-              <p className="text-white/70 text-[10px]">
-                Powered by Agentforce
-              </p>
-            </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="ml-auto text-white/80 hover:text-white"
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M18 6L6 18M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <ChatWindow
-            messages={messages}
-            input={input}
-            setInput={setInput}
-            onSend={handleSend}
-            onQuickReply={handleQuickReply}
-            compact
-            isConnecting={isConnecting}
-            isTyping={isTyping}
-          />
-        </div>
-      )}
-    </>
-  )
+  // Default path (no props): no floating bubble — chat is only available
+  // via the Support screen's inline mode.
+  return null
 }
 
 function ChatWindow({

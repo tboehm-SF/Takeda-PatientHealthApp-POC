@@ -1,0 +1,56 @@
+{
+  "contentType": "zasocitinib_article",
+  "title": "Understanding Your Itch — and Practical Ways to Find Relief",
+  "urlName": "understanding-your-itch",
+  "contentBody": {
+    "title": {
+      "value": "Understanding Your Itch — and Practical Ways to Find Relief",
+      "type": "text"
+    },
+    "summary": {
+      "value": "Intense itch is one of the most challenging parts of living with psoriasis. This article explains why it happens and shares practical, evidence-informed strategies that may help.",
+      "type": "text"
+    },
+    "heroImage": {
+      "value": "/cms/articles/images/hero-itch.svg",
+      "type": "image",
+      "altText": "Itch relief illustration with shield protection icon on orange-amber gradient"
+    },
+    "body": {
+      "value": "<h2>Why does psoriasis itch so much?</h2><p>Itch — known medically as <strong>pruritus</strong> — is the symptom that people with psoriasis most consistently describe as their biggest daily challenge. In psoriasis, it arises from a combination of skin barrier disruption, nerve sensitisation, and inflammatory signals (particularly cytokines like IL-31) that directly activate itch-sensing nerves in the skin.</p><h2>Common triggers worth knowing</h2><ul><li><strong>Heat and sweating</strong> — a warm environment or physical activity raises skin temperature and can rapidly increase itch signals.</li><li><strong>Stress</strong> — emotional stress activates inflammatory pathways that can worsen both plaques and itch sensation.</li><li><strong>Skincare products</strong> — fragrances, sodium lauryl sulphate, and alcohol-based products can strip the skin barrier.</li><li><strong>Alcohol</strong> — a known psoriasis trigger that increases skin inflammation.</li><li><strong>Dry air</strong> — especially in winter or air-conditioned environments.</li></ul><h2>Breaking the scratch cycle</h2><p>Scratching provides brief relief but damages the skin barrier, which drives more inflammation — and more itch. This is sometimes called the <strong>itch-scratch cycle</strong>.</p><ul><li><strong>Cool compresses</strong> — applying a cool, damp cloth temporarily damps down the nerve signals.</li><li><strong>Tapping or gentle pressure</strong> — pressing the skin near an itchy patch can interrupt the itch signal.</li><li><strong>Emollient application</strong> — keeping a fragrance-free moisturiser nearby can both soothe and strengthen the skin barrier.</li><li><strong>Distraction</strong> — engaging activities can meaningfully reduce the perceived intensity of itch.</li></ul><h2>Clothing and your environment</h2><p>Loose-fitting, soft natural fibres — cotton and bamboo in particular — minimise friction and allow skin to breathe. Managing room temperature and humidity at home is also worth attention.</p><p><em>This content is for educational purposes only. If your itch is severe, please speak with your dermatologist.</em></p>",
+      "type": "richtext"
+    },
+    "category": {
+      "value": "Itch Management",
+      "type": "text"
+    },
+    "tag": {
+      "value": "Symptom relief",
+      "type": "text"
+    },
+    "tagColor": {
+      "value": "bg-orange-100 text-orange-700",
+      "type": "text"
+    },
+    "gradient": {
+      "value": "from-orange-400 to-amber-500",
+      "type": "text"
+    },
+    "readTime": {
+      "value": "5 min",
+      "type": "text"
+    },
+    "psodiskDomains": {
+      "value": "itch",
+      "type": "text"
+    },
+    "nrsMin": {
+      "value": 7,
+      "type": "number"
+    },
+    "nrsMax": {
+      "value": 10,
+      "type": "number"
+    }
+  }
+}

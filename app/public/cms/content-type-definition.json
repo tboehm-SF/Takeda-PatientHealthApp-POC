@@ -1,0 +1,98 @@
+{
+  "contentTypeName": "zasocitinib_article",
+  "label": "Zasocitinib Article",
+  "description": "Patient education articles for the Zasocitinib treatment tracker app. Content is personalised based on patient PsOdisk domain scores and NRS itch intensity.",
+  "fields": [
+    {
+      "name": "title",
+      "label": "Title",
+      "type": "text",
+      "required": true,
+      "description": "Article headline displayed on cards and article viewer"
+    },
+    {
+      "name": "summary",
+      "label": "Summary",
+      "type": "text",
+      "required": true,
+      "description": "1-2 sentence preview shown on content cards"
+    },
+    {
+      "name": "heroImage",
+      "label": "Hero Image",
+      "type": "image",
+      "required": true,
+      "description": "Card and article header image (recommended 800x400 SVG or 2:1 aspect)"
+    },
+    {
+      "name": "body",
+      "label": "Article Body",
+      "type": "richtext",
+      "required": true,
+      "description": "Full article content with HTML formatting (h2, p, ul, li, strong, em)"
+    },
+    {
+      "name": "category",
+      "label": "Category",
+      "type": "text",
+      "required": true,
+      "description": "Content category — maps to Education Hub categories",
+      "validValues": [
+        "Itch Management",
+        "Wellbeing",
+        "Lifestyle",
+        "About Zasocitinib",
+        "Managing Psoriasis"
+      ]
+    },
+    {
+      "name": "tag",
+      "label": "Display Tag",
+      "type": "text",
+      "required": true,
+      "description": "Short tag shown on content cards (e.g. 'Mental health', 'Sleep', 'Symptom relief')"
+    },
+    {
+      "name": "tagColor",
+      "label": "Tag Color Classes",
+      "type": "text",
+      "required": false,
+      "description": "Tailwind CSS classes for tag styling (e.g. 'bg-purple-100 text-purple-700')"
+    },
+    {
+      "name": "gradient",
+      "label": "Card Gradient",
+      "type": "text",
+      "required": false,
+      "description": "Tailwind gradient classes for card hero area (e.g. 'from-purple-400 to-pink-500')"
+    },
+    {
+      "name": "readTime",
+      "label": "Read Time",
+      "type": "text",
+      "required": false,
+      "description": "Estimated reading time (e.g. '5 min')"
+    },
+    {
+      "name": "psodiskDomains",
+      "label": "PsOdisk Domains",
+      "type": "text",
+      "required": false,
+      "description": "Comma-separated PsOdisk domains for personalisation targeting (emotional, sleep, itch, work, social, body)"
+    },
+    {
+      "name": "nrsMin",
+      "label": "NRS Minimum Trigger",
+      "type": "number",
+      "required": false,
+      "description": "Minimum NRS itch score to trigger this content (0-10)"
+    },
+    {
+      "name": "nrsMax",
+      "label": "NRS Maximum Trigger",
+      "type": "number",
+      "required": false,
+      "description": "Maximum NRS itch score to trigger this content (0-10)"
+    }
+  ]
+}

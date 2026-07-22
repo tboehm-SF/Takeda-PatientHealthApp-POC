@@ -1,0 +1,56 @@
+{
+  "contentType": "zasocitinib_article",
+  "title": "The Emotional Side of Psoriasis: It's More Than Skin Deep",
+  "urlName": "emotional-side-of-psoriasis",
+  "contentBody": {
+    "title": {
+      "value": "The Emotional Side of Psoriasis: It's More Than Skin Deep",
+      "type": "text"
+    },
+    "summary": {
+      "value": "Living with psoriasis can take a real emotional toll. Research shows this is a recognised part of the condition — and there are approaches that genuinely help.",
+      "type": "text"
+    },
+    "heroImage": {
+      "value": "/cms/articles/images/hero-emotional.svg",
+      "type": "image",
+      "altText": "Emotional wellbeing illustration with heart and connection icons on purple-pink gradient"
+    },
+    "body": {
+      "value": "<h2>You're not imagining it</h2><p>Psoriasis is classified as a <strong>systemic inflammatory disease</strong> — meaning its effects extend well beyond the skin. Research consistently shows that people living with psoriasis experience rates of depression and anxiety that are roughly two to three times higher than those seen in the general population. This is not a sign of weakness or an overreaction to a skin condition. It reflects something real about how chronic inflammation, visible symptoms, and the unpredictable nature of flares can affect a person's mental health over time.</p><p>If you've been feeling low, anxious, irritable, or withdrawn — particularly during a flare — it's worth knowing that you're in good company, and that what you're feeling is a well-recognised part of this condition.</p><h2>The skin-brain connection</h2><p>The relationship between psoriasis and emotional health runs in both directions. Psychological stress activates the body's stress response, increasing cortisol and inflammatory signals — the same ones that drive psoriatic plaques. This means stress doesn't just feel bad; it can directly trigger or worsen skin flares. Conversely, when inflammation is brought under better control, emotional wellbeing scores in clinical studies tend to improve as well.</p><p>This is useful to understand, because it means looking after your mental health is not separate from managing your psoriasis — it is genuinely part of the same picture.</p><h2>What the evidence suggests helps</h2><ul><li><strong>Mindfulness-based stress reduction (MBSR)</strong> — a well-known study showed that people with psoriasis who practised mindfulness meditation during light therapy achieved skin clearance significantly faster than those who didn't.</li><li><strong>Physical activity</strong> — regular moderate exercise reduces systemic inflammation, improves mood through endorphin release, and is associated with better psoriasis outcomes.</li><li><strong>Social connection</strong> — connection with others — especially those who understand what you're going through — is one of the most reliable buffers against anxiety and depression.</li><li><strong>Peer communities</strong> — organisations such as the National Psoriasis Foundation offer peer networks and online communities specifically for people living with psoriasis.</li></ul><h2>Talking to your care team</h2><p>Many dermatologists now routinely ask about emotional wellbeing as part of psoriasis care. If you are finding that low mood or anxiety is consistently present, it is worth raising with your care team.</p><p><em>This content is for educational purposes only and is not a substitute for personalised advice from your healthcare team.</em></p>",
+      "type": "richtext"
+    },
+    "category": {
+      "value": "Wellbeing",
+      "type": "text"
+    },
+    "tag": {
+      "value": "Mental health",
+      "type": "text"
+    },
+    "tagColor": {
+      "value": "bg-purple-100 text-purple-700",
+      "type": "text"
+    },
+    "gradient": {
+      "value": "from-purple-400 to-pink-500",
+      "type": "text"
+    },
+    "readTime": {
+      "value": "6 min",
+      "type": "text"
+    },
+    "psodiskDomains": {
+      "value": "emotional",
+      "type": "text"
+    },
+    "nrsMin": {
+      "value": null,
+      "type": "number"
+    },
+    "nrsMax": {
+      "value": null,
+      "type": "number"
+    }
+  }
+}

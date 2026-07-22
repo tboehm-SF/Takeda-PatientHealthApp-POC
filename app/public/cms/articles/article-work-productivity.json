@@ -1,0 +1,56 @@
+{
+  "contentType": "zasocitinib_article",
+  "title": "Psoriasis at Work: Managing Fatigue and Staying Productive",
+  "urlName": "psoriasis-at-work",
+  "contentBody": {
+    "title": {
+      "value": "Psoriasis at Work: Managing Fatigue and Staying Productive",
+      "type": "text"
+    },
+    "summary": {
+      "value": "Fatigue and reduced focus at work are common when living with psoriasis — and often underestimated. Here are practical strategies that can help.",
+      "type": "text"
+    },
+    "heroImage": {
+      "value": "/cms/articles/images/hero-work.svg",
+      "type": "image",
+      "altText": "Work productivity illustration with briefcase and energy indicators on orange-red gradient"
+    },
+    "body": {
+      "value": "<h2>When psoriasis follows you to work</h2><p>For many people, the impact of psoriasis doesn't stay at home. <strong>Work productivity</strong> is one of the most consistently reported quality-of-life effects, with studies showing average productivity losses of 20–40% in people with moderate-to-severe disease. This is largely about <strong>presenteeism</strong>: showing up, but not quite operating at full capacity.</p><h2>The role of inflammatory fatigue</h2><p>Because psoriasis is a systemic inflammatory disease, the immune activity that drives plaques also produces whole-body effects — including <strong>inflammatory fatigue</strong>. This is different from simply being tired. It can affect concentration, decision-making, emotional resilience, and the ability to sustain effort.</p><h2>Practical strategies for managing at work</h2><ul><li><strong>Identify your energy peaks</strong> — plan your most demanding work into your 2–4 hour window of peak alertness.</li><li><strong>Build in short breaks</strong> — brief 5–10 minute breaks reset concentration and reduce the cumulative toll.</li><li><strong>Manage your environment</strong> — heat and sweating are common itch triggers. A desk fan or loose clothing can help.</li><li><strong>Communicate on your own terms</strong> — you're not required to disclose your diagnosis, but many jurisdictions require employers to make reasonable accommodations.</li><li><strong>Get ahead of flares</strong> — if you notice early signs, completing time-sensitive work before symptoms peak can reduce pressure.</li></ul><h2>A word on effective treatment</h2><p>Systemic therapies that target the underlying inflammatory pathways are associated with meaningful improvements in both fatigue and work productivity. If your current treatment isn't adequately controlling symptoms affecting you at work, that is a legitimate point to raise with your dermatologist.</p><p><em>This content is for educational purposes only and is not a substitute for personalised advice from your healthcare team.</em></p>",
+      "type": "richtext"
+    },
+    "category": {
+      "value": "Lifestyle",
+      "type": "text"
+    },
+    "tag": {
+      "value": "Work life",
+      "type": "text"
+    },
+    "tagColor": {
+      "value": "bg-orange-100 text-orange-700",
+      "type": "text"
+    },
+    "gradient": {
+      "value": "from-orange-400 to-red-500",
+      "type": "text"
+    },
+    "readTime": {
+      "value": "5 min",
+      "type": "text"
+    },
+    "psodiskDomains": {
+      "value": "work",
+      "type": "text"
+    },
+    "nrsMin": {
+      "value": null,
+      "type": "number"
+    },
+    "nrsMax": {
+      "value": null,
+      "type": "number"
+    }
+  }
+}
