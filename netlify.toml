@@ -3,6 +3,13 @@
   command = "npm run build"
   publish = "dist"
 
+# Proxy SCRT2 API calls to Salesforce to avoid CORS issues
+[[redirects]]
+  from = "/api/scrt2/*"
+  to = "https://storm-ffbfcc9fa2ad3e.my.salesforce-scrt.com/:splat"
+  status = 200
+  force = true
+
 # SPA fallback so client-side routes resolve to index.html
 [[redirects]]
   from = "/*"
