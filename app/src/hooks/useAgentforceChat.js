@@ -4,11 +4,11 @@ import { pushD360Event } from '../components/D360Panel'
 
 /**
  * React hook that manages a real-time conversation with the Agentforce
- * Service Agent via the SCRT2 v2 REST + SSE API (unauthenticated path).
+ * Service Agent via the SCRT2 v1 REST + SSE API (unauthenticated path).
  *
  * Flow:
  *   1.  On first user message → obtain an unauthenticated access token
- *   2.  Create a conversation with routingType: "agent"
+ *   2.  Create a conversation
  *   3.  Open an SSE stream for agent replies
  *   4.  Send user messages and surface agent responses in real time
  */
@@ -34,16 +34,16 @@ export default function useAgentforceChat() {
 
   // ---------- helpers ----------
 
-  /** Step 1: Obtain unauthenticated access token (SCRT2 v2) */
+  /** Step 1: Obtain unauthenticated access token (SCRT2 v1) */
   async function getAccessToken() {
-    const url = `${SCRT2_BASE}/iamessage/api/v2/authorization/unauthenticated/access-token`
+    const url = `${SCRT2_BASE}/iamessage/v1/authorization/unauthenticated/accessToken?clientName=Web_v1`
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         orgId: config.orgId,
-        esDeveloperName: config.deploymentName,
-        capabilitiesVersion: '1',
+        developerName: config.deploymentName,
+        capabilitiesVersion: '260',
       }),
     })
     if (!res.ok) {
@@ -54,19 +54,16 @@ export default function useAgentforceChat() {
     return data.accessToken
   }
 
-  /** Step 2: Create conversation (SCRT2 v2) */
+  /** Step 2: Create conversation (SCRT2 v1) */
   async function createConversation(token) {
-    const url = `${SCRT2_BASE}/iamessage/api/v2/conversation`
+    const url = `${SCRT2_BASE}/iamessage/v1/conversation?clientName=Web_v1`
     const res = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
-        'X-Org-Id': config.orgId,
       },
-      body: JSON.stringify({
-        routingType: 'agent',
-      }),
+      body: JSON.stringify({}),
     })
     if (!res.ok) {
       const errText = await res.text().catch(() => '')
@@ -76,10 +73,9 @@ export default function useAgentforceChat() {
     return data.conversationId
   }
 
-  /** Step 3: Open SSE stream for agent responses */
+  /** Step 3: Open SSE stream for agent responses (SCRT2 v1) */
   function openSSE(token, conversationId) {
-    // Try v2 SSE endpoint first, fallback to v1 if needed
-    const url = `${SCRT2_BASE}/iamessage/api/v2/conversation/${conversationId}/events?accessToken=${encodeURIComponent(token)}`
+    const url = `${SCRT2_BASE}/iamessage/v1/conversation/${conversationId}/events?accessToken=${encodeURIComponent(token)}&clientName=Web_v1`
     const source = new EventSource(url)
 
     source.addEventListener('CONVERSATION_MESSAGE', (e) => {
@@ -157,6 +153,15 @@ export default function useAgentforceChat() {
   /** Pull plain text from the SCRT2 entry payload (handles multiple formats). */
   function extractText(payload) {
     if (!payload) return ''
+    // v1 format: entryPayload is a JSON string containing abstractMessage
+    if (typeof payload === 'string') {
+      try {
+        const parsed = JSON.parse(payload)
+        return extractText(parsed)
+      } catch {
+        return payload
+      }
+    }
     // Direct text field
     if (typeof payload.text === 'string') return payload.text
     // StaticContentMessage wrapping
@@ -195,17 +200,20 @@ export default function useAgentforceChat() {
           setIsConnecting(false)
         }
 
-        // Send the message (v2 format)
-        const sendUrl = `${SCRT2_BASE}/iamessage/api/v2/conversation/${conversationIdRef.current}/message`
+        // Send the message (v1 StaticContentMessage format)
+        const msgId = `msg-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+        const sendUrl = `${SCRT2_BASE}/iamessage/v1/conversation/${conversationIdRef.current}/message?clientName=Web_v1`
         const res = await fetch(sendUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${tokenRef.current}`,
-            'X-Org-Id': config.orgId,
           },
           body: JSON.stringify({
-            message: {
+            id: msgId,
+            messageType: 'StaticContentMessage',
+            staticContent: {
+              formatType: 'Text',
               text,
             },
           }),
