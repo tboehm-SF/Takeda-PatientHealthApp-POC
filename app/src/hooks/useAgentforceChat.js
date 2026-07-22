@@ -4,16 +4,19 @@ import { pushD360Event } from '../components/D360Panel'
 
 /**
  * React hook that manages a real-time conversation with the Agentforce
- * Service Agent via the SCRT2 v1 REST + SSE API (unauthenticated path).
+ * Service Agent via the SCRT2 REST API (unauthenticated path).
  *
  * Flow:
- *   1.  On first user message → obtain an unauthenticated access token
- *   2.  Create a conversation
- *   3.  Open an SSE stream for agent replies
- *   4.  Send user messages and surface agent responses in real time
+ *   1.  On first user message → obtain an unauthenticated access token (v1)
+ *   2.  Create a conversation (v1)
+ *   3.  Poll the v2 entries endpoint for agent responses
+ *   4.  Send user messages via v1 and surface agent responses via polling
  */
 
 const SCRT2_BASE = config.scrt2URL
+const POLL_INTERVAL_MS = 2000
+const POLL_FAST_MS = 1000
+const POLL_FAST_COUNT = 5
 
 export default function useAgentforceChat() {
   const [messages, setMessages] = useState([
@@ -30,7 +33,9 @@ export default function useAgentforceChat() {
   // Refs survive re-renders; cleared on unmount.
   const tokenRef = useRef(null)
   const conversationIdRef = useRef(null)
-  const sseRef = useRef(null)
+  const pollingRef = useRef(null)
+  const seenEntryIdsRef = useRef(new Set())
+  const pollCountRef = useRef(0)
 
   // ---------- helpers ----------
 
@@ -73,87 +78,86 @@ export default function useAgentforceChat() {
     return data.conversationId
   }
 
-  /** Step 3: Open SSE stream for agent responses (SCRT2 v1) */
-  function openSSE(token, conversationId) {
-    const url = `${SCRT2_BASE}/iamessage/v1/conversation/${conversationId}/events?accessToken=${encodeURIComponent(token)}&clientName=Web_v1`
-    const source = new EventSource(url)
+  /** Step 3: Poll the v2 entries endpoint for agent/chatbot responses */
+  function startPolling(token, conversationId) {
+    // Stop any existing polling
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current)
+    }
+    pollCountRef.current = 0
 
-    source.addEventListener('CONVERSATION_MESSAGE', (e) => {
+    const poll = async () => {
       try {
-        const payload = JSON.parse(e.data)
-        // Only surface agent messages (not echoes of our own)
-        if (
-          payload?.conversationEntry?.entryType === 'Message' &&
-          payload?.conversationEntry?.sender?.role === 'Agent'
-        ) {
-          const text = extractText(payload.conversationEntry?.entryPayload)
-          if (text) {
-            setMessages((prev) => [
-              ...prev,
-              { id: `bot-${Date.now()}`, sender: 'bot', text },
-            ])
-            pushD360Event('Agent Response Received', 'agentforce')
-          }
-          setIsTyping(false)
-        }
-      } catch {
-        // ignore malformed events
-      }
-    })
+        const url = `${SCRT2_BASE}/iamessage/api/v2/conversation/${conversationId}/entries`
+        const res = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'X-Org-Id': config.orgId,
+          },
+        })
+        if (!res.ok) return
 
-    // Also listen for generic 'message' events (some SCRT2 versions use this)
-    source.onmessage = (e) => {
-      try {
-        const payload = JSON.parse(e.data)
-        if (
-          payload?.conversationEntry?.entryType === 'Message' &&
-          payload?.conversationEntry?.sender?.role === 'Agent'
-        ) {
-          const text = extractText(payload.conversationEntry?.entryPayload)
-          if (text) {
-            setMessages((prev) => [
-              ...prev,
-              { id: `bot-${Date.now()}-${Math.random()}`, sender: 'bot', text },
-            ])
-            pushD360Event('Agent Response Received', 'agentforce')
+        const data = await res.json()
+        const entries = data.conversationEntries || []
+
+        let foundNewBotMessage = false
+
+        for (const entry of entries) {
+          const entryId = entry.identifier || entry.id || JSON.stringify(entry.sender) + entry.transcriptedTimestamp
+
+          // Skip already-processed entries
+          if (seenEntryIdsRef.current.has(entryId)) continue
+
+          // Mark as seen
+          seenEntryIdsRef.current.add(entryId)
+
+          // Only surface bot/agent messages (not our own echoes)
+          const role = entry.sender?.role
+          if (
+            entry.entryType === 'Message' &&
+            (role === 'Chatbot' || role === 'Agent')
+          ) {
+            const text = extractText(entry.entryPayload)
+            if (text) {
+              foundNewBotMessage = true
+              setMessages((prev) => [
+                ...prev,
+                { id: `bot-${Date.now()}-${Math.random()}`, sender: 'bot', text },
+              ])
+              pushD360Event('Agent Response Received', 'agentforce')
+            }
           }
-          setIsTyping(false)
         }
-      } catch {
-        // not all messages are JSON
+
+        if (foundNewBotMessage) {
+          setIsTyping(false)
+          // Reset to fast polling for follow-up responses
+          pollCountRef.current = 0
+        }
+
+        // Adjust polling speed: fast for first few polls after a message, then slow
+        pollCountRef.current++
+      } catch (err) {
+        console.warn('[Agentforce] Poll error:', err.message)
       }
     }
 
-    source.addEventListener('CONVERSATION_TYPING_STARTED_INDICATOR', () => {
-      setIsTyping(true)
-    })
-
-    source.addEventListener('CONVERSATION_TYPING_STOPPED_INDICATOR', () => {
-      setIsTyping(false)
-    })
-
-    source.addEventListener('CONVERSATION_ROUTED', () => {
-      // Agent accepted the conversation — no user-visible action needed.
-      console.log('[Agentforce] Conversation routed to agent')
-    })
-
-    source.addEventListener('CONVERSATION_PARTICIPANT_CHANGED', () => {
-      console.log('[Agentforce] Participant changed')
-    })
-
-    source.onerror = (err) => {
-      console.warn('[Agentforce] SSE error:', err)
-      // EventSource will auto-reconnect for transient failures.
-      setIsTyping(false)
+    // Start with fast polling, then switch to normal interval
+    const runPolling = () => {
+      poll()
+      pollingRef.current = setInterval(() => {
+        poll()
+      }, pollCountRef.current < POLL_FAST_COUNT ? POLL_FAST_MS : POLL_INTERVAL_MS)
     }
 
-    sseRef.current = source
+    // Initial poll after a brief delay to let the server process
+    setTimeout(runPolling, 500)
   }
 
   /** Pull plain text from the SCRT2 entry payload (handles multiple formats). */
   function extractText(payload) {
     if (!payload) return ''
-    // v1 format: entryPayload is a JSON string containing abstractMessage
+    // v1/v2 format: entryPayload may be a JSON string
     if (typeof payload === 'string') {
       try {
         const parsed = JSON.parse(payload)
@@ -195,9 +199,12 @@ export default function useAgentforceChat() {
           console.log('[Agentforce] Token obtained, creating conversation...')
           conversationIdRef.current = await createConversation(tokenRef.current)
           console.log('[Agentforce] Conversation created:', conversationIdRef.current)
-          openSSE(tokenRef.current, conversationIdRef.current)
-          console.log('[Agentforce] SSE stream opened')
+          startPolling(tokenRef.current, conversationIdRef.current)
+          console.log('[Agentforce] Polling started')
           setIsConnecting(false)
+        } else {
+          // Reset poll counter for fast polling after new message
+          pollCountRef.current = 0
         }
 
         // Send the message (v1 StaticContentMessage format)
@@ -244,12 +251,12 @@ export default function useAgentforceChat() {
     [],
   )
 
-  // Cleanup SSE on unmount
+  // Cleanup polling on unmount
   useEffect(() => {
     return () => {
-      if (sseRef.current) {
-        sseRef.current.close()
-        sseRef.current = null
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current)
+        pollingRef.current = null
       }
     }
   }, [])
