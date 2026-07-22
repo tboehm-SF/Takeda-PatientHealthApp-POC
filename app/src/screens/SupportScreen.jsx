@@ -1,9 +1,63 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { pushD360Event } from '../components/D360Panel'
-import AgentforceChat from '../components/AgentforceChat'
 
 export default function SupportScreen() {
-  const [chatExpanded, setChatExpanded] = useState(false)
+  const [sdkReady, setSdkReady] = useState(false)
+  const [chatLaunched, setChatLaunched] = useState(false)
+
+  // Listen for the SDK's button-created event (signals readiness)
+  useEffect(() => {
+    function onReady() {
+      setSdkReady(true)
+    }
+    window.addEventListener('onEmbeddedMessagingReady', onReady)
+    window.addEventListener('onEmbeddedMessagingButtonCreated', onReady)
+    // Also check if already ready
+    if (window.embeddedservice_bootstrap?.utilAPI) {
+      setSdkReady(true)
+    }
+    return () => {
+      window.removeEventListener('onEmbeddedMessagingReady', onReady)
+      window.removeEventListener('onEmbeddedMessagingButtonCreated', onReady)
+    }
+  }, [])
+
+  function handleLaunchChat() {
+    pushD360Event('AI Chat Launch', 'click')
+    setChatLaunched(true)
+
+    if (window.embeddedservice_bootstrap?.utilAPI?.launchChat) {
+      window.embeddedservice_bootstrap.utilAPI
+        .launchChat()
+        .then(() => console.log('[Agentforce] Chat launched'))
+        .catch((err) => {
+          console.warn('[Agentforce] Chat launch error:', err)
+          // Show the SDK container if it was hidden
+          const frame = document.querySelector('.embeddedMessagingFrame')
+          if (frame) frame.style.display = ''
+        })
+    } else {
+      console.warn('[Agentforce] SDK not ready yet — retrying in 1s')
+      setTimeout(() => {
+        if (window.embeddedservice_bootstrap?.utilAPI?.launchChat) {
+          window.embeddedservice_bootstrap.utilAPI.launchChat()
+            .catch((err) => console.warn('[Agentforce] Retry failed:', err))
+        }
+      }, 1000)
+    }
+
+    // Show the SDK frame container
+    const frame = document.querySelector('.embeddedMessagingFrame')
+    if (frame) frame.style.display = ''
+    // Also un-hide via the top-level style we injected
+    const hideStyle = document.querySelector('style')
+    if (hideStyle && hideStyle.textContent.includes('.embeddedMessagingFrame')) {
+      hideStyle.textContent = hideStyle.textContent.replace(
+        '.embeddedMessagingFrame { display: none !important; }',
+        ''
+      )
+    }
+  }
 
   return (
     <div className="bg-[#f5f8fa] pb-6 screen-enter">
@@ -14,75 +68,45 @@ export default function SupportScreen() {
       </div>
 
       <div className="px-4 pt-4 space-y-4">
-        {/* Agentforce AI chat — inline card / expanded chat */}
-        {!chatExpanded ? (
-          <button
-            onClick={() => { pushD360Event('AI Chat Expand', 'click'); setChatExpanded(true) }}
-            className="w-full text-left"
+        {/* Agentforce AI chat — launch card */}
+        <button
+          onClick={handleLaunchChat}
+          className="w-full text-left"
+        >
+          <div
+            className="rounded-2xl p-4 text-white"
+            style={{ background: 'linear-gradient(135deg, #1a8b91, #2dc8ce)' }}
           >
-            <div
-              className="rounded-2xl p-4 text-white"
-              style={{ background: 'linear-gradient(135deg, #1a8b91, #2dc8ce)' }}
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
-                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="font-bold text-[16px]">AI Support Assistant</p>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-green-300" />
-                    <p className="text-white/80 text-[12px]">Available 24/7 · Powered by Agentforce</p>
-                  </div>
-                </div>
-              </div>
-              <p className="text-white/80 text-[13px] leading-relaxed">
-                Ask me anything about zasocitinib, managing symptoms, or your treatment journey. I'm here whenever you need support.
-              </p>
-              <div className="mt-3 flex gap-2">
-                {['Missed dose?', 'Side effects', 'How it works'].map((q) => (
-                  <span key={q} className="text-[11px] px-2.5 py-1 rounded-full bg-white/20 font-medium">
-                    {q}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </button>
-        ) : (
-          <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-100 bg-white">
-            {/* Inline chat header with collapse button */}
-            <div
-              className="flex items-center gap-3 px-4 py-3"
-              style={{ background: 'linear-gradient(135deg, #1a8b91, #2dc8ce)' }}
-            >
-              <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
                   <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" />
                 </svg>
               </div>
-              <div className="flex-1">
-                <p className="text-white font-bold text-[15px]">AI Support Assistant</p>
+              <div>
+                <p className="font-bold text-[16px]">AI Support Assistant</p>
                 <div className="flex items-center gap-1.5">
                   <div className="w-2 h-2 rounded-full bg-green-300" />
-                  <p className="text-white/80 text-[11px]">Powered by Agentforce · Always available</p>
+                  <p className="text-white/80 text-[12px]">Available 24/7 · Powered by Agentforce</p>
                 </div>
               </div>
-              <button
-                onClick={() => setChatExpanded(false)}
-                className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
-                  <path d="M18 15l-6-6-6 6" />
-                </svg>
-              </button>
             </div>
+            <p className="text-white/80 text-[13px] leading-relaxed">
+              Ask me anything about zasocitinib, managing symptoms, or your treatment journey. I'm here whenever you need support.
+            </p>
+            <div className="mt-3 flex gap-2">
+              {['Missed dose?', 'Side effects', 'How it works'].map((q) => (
+                <span key={q} className="text-[11px] px-2.5 py-1 rounded-full bg-white/20 font-medium">
+                  {q}
+                </span>
+              ))}
+            </div>
+          </div>
+        </button>
 
-            {/* Chat window rendered inline at a fixed height */}
-            <div style={{ height: '400px' }}>
-              <AgentforceChat isInline onClose={() => setChatExpanded(false)} />
-            </div>
+        {chatLaunched && (
+          <div className="text-center text-[12px] text-gray-400 py-1">
+            Chat window opened — look for the Agentforce chat overlay
           </div>
         )}
 
