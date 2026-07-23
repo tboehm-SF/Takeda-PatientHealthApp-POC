@@ -6,17 +6,21 @@ import { pushD360Event } from '../components/D360Panel'
  * React hook that manages a real-time conversation with the Agentforce
  * Service Agent via the SCRT2 REST API (unauthenticated path).
  *
- * Flow:
- *   1.  On first user message → obtain an unauthenticated access token (v1)
- *   2.  Create a conversation (v1)
- *   3.  Poll the v2 entries endpoint for agent responses
- *   4.  Send user messages via v1 and surface agent responses via polling
+ * Optimised flow:
+ *   1.  On mount → pre-warm: obtain an access token + create a conversation
+ *       so the session is ready before the user's first message
+ *   2.  Connect to the SSE event-router endpoint for instant, push-based
+ *       delivery of agent responses (replaces polling)
+ *   3.  Fall back to polling only if SSE fails (e.g. CORS / proxy issues)
+ *   4.  Send user messages via v1 StaticContentMessage format
  */
 
 const SCRT2_BASE = config.scrt2URL
+
+// Polling fallback constants (only used if SSE fails)
 const POLL_INTERVAL_MS = 2000
-const POLL_FAST_MS = 1000
-const POLL_FAST_COUNT = 5
+const POLL_FAST_MS = 800
+const POLL_FAST_COUNT = 8
 
 export default function useAgentforceChat() {
   const [messages, setMessages] = useState([])
@@ -27,14 +31,17 @@ export default function useAgentforceChat() {
   // Refs survive re-renders; cleared on unmount.
   const tokenRef = useRef(null)
   const conversationIdRef = useRef(null)
-  const pollingRef = useRef(null)
+  const abortRef = useRef(null)          // SSE AbortController
+  const pollingRef = useRef(null)        // fallback polling timer
   const seenEntryIdsRef = useRef(new Set())
   const pollCountRef = useRef(0)
   const hasReceivedWelcomeRef = useRef(false)
+  const sessionReadyRef = useRef(null)   // resolves when pre-warm finishes
+  const usingSSERef = useRef(false)      // true once SSE is active
 
-  // ---------- helpers ----------
+  // ──────────────────── helpers ────────────────────
 
-  /** Step 1: Obtain unauthenticated access token (SCRT2 v1) */
+  /** Obtain unauthenticated access token (SCRT2 v1) */
   async function getAccessToken() {
     const url = `${SCRT2_BASE}/iamessage/v1/authorization/unauthenticated/accessToken?clientName=Web_v1`
     const res = await fetch(url, {
@@ -54,7 +61,7 @@ export default function useAgentforceChat() {
     return data.accessToken
   }
 
-  /** Step 2: Create conversation (SCRT2 v1) */
+  /** Create conversation (SCRT2 v1) */
   async function createConversation(token) {
     const url = `${SCRT2_BASE}/iamessage/v1/conversation?clientName=Web_v1`
     const res = await fetch(url, {
@@ -73,13 +80,167 @@ export default function useAgentforceChat() {
     return data.conversationId
   }
 
-  /** Step 3: Poll the v2 entries endpoint for agent/chatbot responses */
-  function startPolling(token, conversationId) {
-    // Stop any existing polling
-    if (pollingRef.current) {
-      clearTimeout(pollingRef.current)
+  // ──────────────────── SSE (primary) ────────────────────
+
+  /**
+   * Connect to the SCRT2 SSE event-router using fetch + ReadableStream.
+   * We can't use the native EventSource API because it doesn't support
+   * custom Authorization headers. Instead we stream the response body
+   * manually and parse SSE frames ourselves.
+   */
+  function connectSSE(token, conversationId) {
+    const controller = new AbortController()
+    abortRef.current = controller
+
+    const sseUrl = `${SCRT2_BASE}/eventrouter/v1/sse`
+
+    ;(async () => {
+      try {
+        const res = await fetch(sseUrl, {
+          method: 'GET',
+          headers: {
+            Accept: 'text/event-stream',
+            Authorization: `Bearer ${token}`,
+            'X-Org-Id': config.orgId,
+          },
+          signal: controller.signal,
+        })
+
+        if (!res.ok || !res.body) {
+          console.warn('[Agentforce] SSE connection failed, falling back to polling')
+          startPolling(token, conversationId)
+          return
+        }
+
+        usingSSERef.current = true
+        console.log('[Agentforce] SSE connected ✓')
+
+        const reader = res.body.getReader()
+        const decoder = new TextDecoder()
+        let buffer = ''
+
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          buffer += decoder.decode(value, { stream: true })
+
+          // SSE frames are separated by double newlines
+          const frames = buffer.split('\n\n')
+          // Keep the last (possibly incomplete) chunk
+          buffer = frames.pop() || ''
+
+          for (const frame of frames) {
+            if (!frame.trim()) continue
+            handleSSEFrame(frame)
+          }
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') return // intentional teardown
+        console.warn('[Agentforce] SSE stream error, falling back to polling:', err.message)
+        if (!usingSSERef.current) {
+          startPolling(token, conversationId)
+        }
+      }
+    })()
+  }
+
+  /** Parse and act on a single SSE frame */
+  function handleSSEFrame(frame) {
+    let eventType = ''
+    let dataLines = []
+
+    for (const line of frame.split('\n')) {
+      if (line.startsWith('event:')) {
+        eventType = line.slice(6).trim()
+      } else if (line.startsWith('data:')) {
+        dataLines.push(line.slice(5).trim())
+      }
     }
+
+    if (dataLines.length === 0) return
+
+    let data
+    try {
+      data = JSON.parse(dataLines.join('\n'))
+    } catch {
+      return // not valid JSON — skip
+    }
+
+    const entryType = eventType || data?.conversationEntry?.entryType || data?.entryType || ''
+
+    switch (entryType) {
+      case 'CONVERSATION_MESSAGE':
+      case 'Message':
+        handleIncomingMessage(data)
+        break
+
+      case 'CONVERSATION_TYPING_STARTED_INDICATOR':
+      case 'TypingStartedIndicator':
+        setIsTyping(true)
+        break
+
+      case 'CONVERSATION_TYPING_STOPPED_INDICATOR':
+      case 'TypingStoppedIndicator':
+        // Only clear typing if we already have at least one bot response
+        if (hasReceivedWelcomeRef.current) {
+          setIsTyping(false)
+        }
+        break
+
+      case 'CONVERSATION_ROUTING_RESULT':
+      case 'RoutingResult':
+        console.log('[Agentforce] Routing result received')
+        break
+
+      default:
+        // Silently ignore other event types
+        break
+    }
+  }
+
+  /** Process an incoming message from either SSE or polling */
+  function handleIncomingMessage(data) {
+    // Normalise: SSE wraps in conversationEntry, polling doesn't
+    const entry = data?.conversationEntry || data
+    const role = entry?.sender?.role
+    const entryId =
+      entry?.identifier ||
+      entry?.id ||
+      JSON.stringify(entry?.sender) + entry?.transcriptedTimestamp
+
+    // Deduplicate
+    if (entryId && seenEntryIdsRef.current.has(entryId)) return
+    if (entryId) seenEntryIdsRef.current.add(entryId)
+
+    // Only surface bot/agent messages (not our own echoes)
+    if (role !== 'Chatbot' && role !== 'Agent') return
+
+    const text = extractText(entry?.entryPayload)
+    if (!text) return
+
+    // The first bot message is the welcome greeting — skip it because
+    // we already show a static welcome in the UI
+    if (!hasReceivedWelcomeRef.current) {
+      hasReceivedWelcomeRef.current = true
+      return
+    }
+
+    setIsTyping(false)
+    setMessages((prev) => [
+      ...prev,
+      { id: `bot-${Date.now()}-${Math.random()}`, sender: 'bot', text },
+    ])
+    pushD360Event('Agent Response Received', 'agentforce')
+  }
+
+  // ──────────────────── Polling (fallback) ────────────────────
+
+  /** Fall back to polling the v2 entries endpoint if SSE can't connect */
+  function startPolling(token, conversationId) {
+    if (pollingRef.current) clearTimeout(pollingRef.current)
     pollCountRef.current = 0
+    console.log('[Agentforce] Using polling fallback')
 
     const poll = async () => {
       try {
@@ -94,19 +255,16 @@ export default function useAgentforceChat() {
 
         const data = await res.json()
         const entries = data.conversationEntries || []
-
         let foundNewBotMessage = false
 
         for (const entry of entries) {
-          const entryId = entry.identifier || entry.id || JSON.stringify(entry.sender) + entry.transcriptedTimestamp
-
-          // Skip already-processed entries
+          const entryId =
+            entry.identifier ||
+            entry.id ||
+            JSON.stringify(entry.sender) + entry.transcriptedTimestamp
           if (seenEntryIdsRef.current.has(entryId)) continue
-
-          // Mark as seen
           seenEntryIdsRef.current.add(entryId)
 
-          // Only surface bot/agent messages (not our own echoes)
           const role = entry.sender?.role
           if (
             entry.entryType === 'Message' &&
@@ -114,8 +272,6 @@ export default function useAgentforceChat() {
           ) {
             const text = extractText(entry.entryPayload)
             if (text) {
-              // The first bot message is the welcome greeting — show it but
-              // keep the typing indicator active for the real answer
               if (!hasReceivedWelcomeRef.current) {
                 hasReceivedWelcomeRef.current = true
                 continue
@@ -132,61 +288,88 @@ export default function useAgentforceChat() {
 
         if (foundNewBotMessage) {
           setIsTyping(false)
-          // Reset to fast polling for follow-up responses
           pollCountRef.current = 0
         }
-
         pollCountRef.current++
       } catch (err) {
         console.warn('[Agentforce] Poll error:', err.message)
       }
     }
 
-    // Use recursive setTimeout instead of setInterval so the delay
-    // adapts dynamically (fast for the first few polls, then slower)
     const scheduleNext = () => {
-      const delay = pollCountRef.current < POLL_FAST_COUNT
-        ? POLL_FAST_MS
-        : POLL_INTERVAL_MS
+      const delay =
+        pollCountRef.current < POLL_FAST_COUNT ? POLL_FAST_MS : POLL_INTERVAL_MS
       pollingRef.current = setTimeout(async () => {
         await poll()
         scheduleNext()
       }, delay)
     }
 
-    // Initial poll after a brief delay to let the server process
     setTimeout(() => {
       poll()
       scheduleNext()
-    }, 500)
+    }, 300)
   }
+
+  // ──────────────────── Payload helpers ────────────────────
 
   /** Pull plain text from the SCRT2 entry payload (handles multiple formats). */
   function extractText(payload) {
     if (!payload) return ''
-    // v1/v2 format: entryPayload may be a JSON string
     if (typeof payload === 'string') {
       try {
-        const parsed = JSON.parse(payload)
-        return extractText(parsed)
+        return extractText(JSON.parse(payload))
       } catch {
         return payload
       }
     }
-    // Direct text field
     if (typeof payload.text === 'string') return payload.text
-    // StaticContentMessage wrapping
     if (payload.abstractMessage?.text) return payload.abstractMessage.text
-    // FormatType RichLink / ListPicker can contain a text field
     if (payload.abstractMessage?.staticContent?.text)
       return payload.abstractMessage.staticContent.text
-    // v2 format: message.text
     if (payload.message?.text) return payload.message.text
-    // Fallback
     return ''
   }
 
-  // ---------- public API ----------
+  // ──────────────────── Pre-warm ────────────────────
+
+  /**
+   * Pre-warm the session on mount: obtain the access token and create the
+   * conversation in the background so there's no delay on the first message.
+   */
+  useEffect(() => {
+    let cancelled = false
+
+    const warmUp = async () => {
+      try {
+        console.log('[Agentforce] Pre-warming session…')
+        const token = await getAccessToken()
+        if (cancelled) return
+
+        const conversationId = await createConversation(token)
+        if (cancelled) return
+
+        tokenRef.current = token
+        conversationIdRef.current = conversationId
+        console.log('[Agentforce] Session ready:', conversationId)
+
+        // Try SSE first, fall back to polling
+        connectSSE(token, conversationId)
+      } catch (err) {
+        console.warn('[Agentforce] Pre-warm failed (will retry on first message):', err.message)
+        // Not fatal — sendMessage will lazy-init if pre-warm didn't finish
+      }
+    }
+
+    // Wrap in a promise so sendMessage can await it
+    sessionReadyRef.current = warmUp()
+
+    return () => {
+      cancelled = true
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ──────────────────── public API ────────────────────
 
   const sendMessage = useCallback(
     async (text) => {
@@ -198,21 +381,23 @@ export default function useAgentforceChat() {
       pushD360Event('Chat Message Sent', 'agentforce')
 
       try {
-        // Lazy-init: first message triggers auth + conversation creation
+        // Wait for pre-warm if it's still in progress
+        if (sessionReadyRef.current) {
+          await sessionReadyRef.current
+        }
+
+        // Lazy-init if pre-warm failed or hasn't finished
         if (!tokenRef.current || !conversationIdRef.current) {
           setIsConnecting(true)
-          console.log('[Agentforce] Obtaining access token...')
+          console.log('[Agentforce] Lazy-init: obtaining access token…')
           tokenRef.current = await getAccessToken()
-          console.log('[Agentforce] Token obtained, creating conversation...')
           conversationIdRef.current = await createConversation(tokenRef.current)
-          console.log('[Agentforce] Conversation created:', conversationIdRef.current)
-          startPolling(tokenRef.current, conversationIdRef.current)
-          console.log('[Agentforce] Polling started')
-          // Brief pause to let the welcome dialog settle before sending
-          await new Promise((r) => setTimeout(r, 1500))
+          connectSSE(tokenRef.current, conversationIdRef.current)
+          // Brief pause to let the welcome dialog settle
+          await new Promise((r) => setTimeout(r, 800))
           setIsConnecting(false)
         } else {
-          // Reset poll counter for fast polling after new message
+          // Reset poll counter for fast polling after new message (fallback mode)
           pollCountRef.current = 0
         }
 
@@ -239,7 +424,7 @@ export default function useAgentforceChat() {
           const errText = await res.text().catch(() => '')
           throw new Error(`Send failed (${res.status}) ${errText}`)
         }
-        console.log('[Agentforce] Message sent successfully')
+        console.log('[Agentforce] Message sent ✓')
       } catch (err) {
         console.warn('[Agentforce] Error:', err.message)
         setIsTyping(false)
@@ -260,11 +445,15 @@ export default function useAgentforceChat() {
     [],
   )
 
-  // Cleanup polling on unmount
+  // Cleanup SSE + polling on unmount
   useEffect(() => {
     return () => {
+      if (abortRef.current) {
+        abortRef.current.abort()
+        abortRef.current = null
+      }
       if (pollingRef.current) {
-        clearInterval(pollingRef.current)
+        clearTimeout(pollingRef.current)
         pollingRef.current = null
       }
     }
