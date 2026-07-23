@@ -85,6 +85,25 @@ function ChatWindow({
   return (
     <div className="flex flex-col" style={{ height: compact ? '340px' : '100%' }}>
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-3 bg-gray-50">
+        {/* Show a static welcome when no messages yet (before conversation starts) */}
+        {messages.length === 0 && !isConnecting && !isTyping && (
+          <div className="flex justify-start">
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center mr-2 flex-shrink-0"
+              style={{
+                background: 'linear-gradient(135deg, #1a8b91, #2dc8ce)',
+              }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="white">
+                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" />
+              </svg>
+            </div>
+            <div className="max-w-[75%] px-3 py-2 rounded-2xl text-[13px] leading-relaxed bg-white text-gray-800 rounded-bl-sm shadow-sm">
+              Hi there! I'm your Zasocitinib Patient Support assistant. I can help you with questions about your medication, the app, symptom tracking, and wellness resources. How can I help you today?
+            </div>
+          </div>
+        )}
+
         {messages.map((msg) => (
           <div
             key={msg.id}
@@ -139,8 +158,8 @@ function ChatWindow({
           </div>
         )}
 
-        {/* Quick replies — only show after the welcome message and before user sends anything */}
-        {messages.length === 1 && (
+        {/* Quick replies — show before user has sent any messages */}
+        {!messages.some((m) => m.sender === 'user') && !isConnecting && !isTyping && (
           <div className="flex flex-wrap gap-1.5 mt-1">
             {QUICK_REPLIES.map((q) => (
               <button

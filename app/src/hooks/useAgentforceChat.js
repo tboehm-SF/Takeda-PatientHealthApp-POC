@@ -19,13 +19,7 @@ const POLL_FAST_MS = 1000
 const POLL_FAST_COUNT = 5
 
 export default function useAgentforceChat() {
-  const [messages, setMessages] = useState([
-    {
-      id: 'welcome',
-      sender: 'bot',
-      text: "Hi 👋 I'm your Zasocitinib support assistant, powered by Agentforce. How can I help you today?",
-    },
-  ])
+  const [messages, setMessages] = useState([])
   const [isConnecting, setIsConnecting] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
   const [error, setError] = useState(null)
@@ -36,6 +30,7 @@ export default function useAgentforceChat() {
   const pollingRef = useRef(null)
   const seenEntryIdsRef = useRef(new Set())
   const pollCountRef = useRef(0)
+  const hasReceivedWelcomeRef = useRef(false)
 
   // ---------- helpers ----------
 
@@ -119,6 +114,18 @@ export default function useAgentforceChat() {
           ) {
             const text = extractText(entry.entryPayload)
             if (text) {
+              // Skip the bot's automatic welcome/greeting if we haven't received
+              // a real response yet — it fires before processing the user's question
+              if (!hasReceivedWelcomeRef.current) {
+                hasReceivedWelcomeRef.current = true
+                // Show the bot's welcome greeting
+                setMessages((prev) => [
+                  ...prev,
+                  { id: `bot-${Date.now()}-${Math.random()}`, sender: 'bot', text },
+                ])
+                // Don't set foundNewBotMessage here — keep polling for the real answer
+                continue
+              }
               foundNewBotMessage = true
               setMessages((prev) => [
                 ...prev,
@@ -201,6 +208,8 @@ export default function useAgentforceChat() {
           console.log('[Agentforce] Conversation created:', conversationIdRef.current)
           startPolling(tokenRef.current, conversationIdRef.current)
           console.log('[Agentforce] Polling started')
+          // Brief pause to let the welcome dialog settle before sending
+          await new Promise((r) => setTimeout(r, 1500))
           setIsConnecting(false)
         } else {
           // Reset poll counter for fast polling after new message
