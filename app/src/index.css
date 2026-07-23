@@ -721,53 +721,79 @@
   }
 
   /* ─────── Standalone PWA mode ─────── */
-  /* Keep the iPhone look, just hide demo chrome and embed D360 inside */
+  /* Full-screen native app — no phone bezel, no demo chrome */
   @media (display-mode: standalone) {
+    body { background: #f5f8fa; }
+    #root { align-items: stretch; justify-content: stretch; }
+
     .demo-note, .demo-personas { display: none !important; }
 
-    /* D360 repositioned inside the phone screen */
+    .phone-frame {
+      width: 100%;
+      height: 100%;
+      border-radius: 0;
+      box-shadow: none;
+      background: #f5f8fa;
+    }
+    .phone-frame::before, .phone-frame::after { display: none; }
+
+    .phone-screen {
+      top: 0; left: 0; right: 0; bottom: 0;
+      border-radius: 0;
+    }
+
+    .dynamic-island { display: none; }
+    .home-indicator { height: env(safe-area-inset-bottom, 0px); }
+    .home-indicator-bar { display: none; }
+
+    /* D360 embedded in-app */
     .d360-badge {
       position: absolute;
-      top: 56px;
-      left: 12px;
+      top: 8px;
+      left: 8px;
       z-index: 200;
       padding: 4px 10px;
       font-size: 10px;
       border-radius: 14px;
-      opacity: 0.75;
+      opacity: 0.7;
     }
 
     .d360-panel {
       position: absolute;
-      top: 52px;
-      left: 10px;
-      width: calc(100% - 20px);
-      max-height: 55vh;
+      top: 8px;
+      left: 8px;
+      width: calc(100% - 16px);
+      max-height: 70vh;
       z-index: 201;
     }
   }
 
   /* iOS standalone fallback (class added by JS) */
+  body.standalone { background: #f5f8fa; }
+  body.standalone #root { align-items: stretch; justify-content: stretch; }
   body.standalone .demo-note,
   body.standalone .demo-personas { display: none !important; }
 
-  body.standalone .d360-badge {
-    position: absolute;
-    top: 56px;
-    left: 12px;
-    z-index: 200;
-    padding: 4px 10px;
-    font-size: 10px;
-    border-radius: 14px;
-    opacity: 0.75;
+  body.standalone .phone-frame {
+    width: 100%; height: 100%;
+    border-radius: 0; box-shadow: none; background: #f5f8fa;
   }
+  body.standalone .phone-frame::before,
+  body.standalone .phone-frame::after { display: none; }
+  body.standalone .phone-screen {
+    top: 0; left: 0; right: 0; bottom: 0; border-radius: 0;
+  }
+  body.standalone .dynamic-island { display: none; }
+  body.standalone .home-indicator { height: env(safe-area-inset-bottom, 0px); }
+  body.standalone .home-indicator-bar { display: none; }
 
+  body.standalone .d360-badge {
+    position: absolute; top: 8px; left: 8px;
+    z-index: 200; padding: 4px 10px; font-size: 10px;
+    border-radius: 14px; opacity: 0.7;
+  }
   body.standalone .d360-panel {
-    position: absolute;
-    top: 52px;
-    left: 10px;
-    width: calc(100% - 20px);
-    max-height: 55vh;
-    z-index: 201;
+    position: absolute; top: 8px; left: 8px;
+    width: calc(100% - 16px); max-height: 70vh; z-index: 201;
   }
 }
