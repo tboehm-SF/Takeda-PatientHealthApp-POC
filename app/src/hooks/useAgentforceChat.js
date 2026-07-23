@@ -77,7 +77,7 @@ export default function useAgentforceChat() {
   function startPolling(token, conversationId) {
     // Stop any existing polling
     if (pollingRef.current) {
-      clearInterval(pollingRef.current)
+      clearTimeout(pollingRef.current)
     }
     pollCountRef.current = 0
 
@@ -114,16 +114,10 @@ export default function useAgentforceChat() {
           ) {
             const text = extractText(entry.entryPayload)
             if (text) {
-              // Skip the bot's automatic welcome/greeting if we haven't received
-              // a real response yet — it fires before processing the user's question
+              // The first bot message is the welcome greeting — show it but
+              // keep the typing indicator active for the real answer
               if (!hasReceivedWelcomeRef.current) {
                 hasReceivedWelcomeRef.current = true
-                // Show the bot's welcome greeting
-                setMessages((prev) => [
-                  ...prev,
-                  { id: `bot-${Date.now()}-${Math.random()}`, sender: 'bot', text },
-                ])
-                // Don't set foundNewBotMessage here — keep polling for the real answer
                 continue
               }
               foundNewBotMessage = true
@@ -142,23 +136,29 @@ export default function useAgentforceChat() {
           pollCountRef.current = 0
         }
 
-        // Adjust polling speed: fast for first few polls after a message, then slow
         pollCountRef.current++
       } catch (err) {
         console.warn('[Agentforce] Poll error:', err.message)
       }
     }
 
-    // Start with fast polling, then switch to normal interval
-    const runPolling = () => {
-      poll()
-      pollingRef.current = setInterval(() => {
-        poll()
-      }, pollCountRef.current < POLL_FAST_COUNT ? POLL_FAST_MS : POLL_INTERVAL_MS)
+    // Use recursive setTimeout instead of setInterval so the delay
+    // adapts dynamically (fast for the first few polls, then slower)
+    const scheduleNext = () => {
+      const delay = pollCountRef.current < POLL_FAST_COUNT
+        ? POLL_FAST_MS
+        : POLL_INTERVAL_MS
+      pollingRef.current = setTimeout(async () => {
+        await poll()
+        scheduleNext()
+      }, delay)
     }
 
     // Initial poll after a brief delay to let the server process
-    setTimeout(runPolling, 500)
+    setTimeout(() => {
+      poll()
+      scheduleNext()
+    }, 500)
   }
 
   /** Pull plain text from the SCRT2 entry payload (handles multiple formats). */
