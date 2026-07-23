@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { AppProvider, useApp } from './context/AppContext'
 import StatusBar from './components/StatusBar'
 import BottomNav from './components/BottomNav'
@@ -13,7 +14,33 @@ import SupportScreen from './screens/SupportScreen'
 import ArticleDetail from './screens/ArticleDetail'
 import SyncingOverlay from './screens/SyncingOverlay'
 
-function PhoneApp() {
+// Detect if running as installed PWA (standalone mode)
+function useIsStandalone() {
+  const [standalone, setStandalone] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true // iOS Safari
+    )
+  })
+
+  useEffect(() => {
+    const mq = window.matchMedia('(display-mode: standalone)')
+    const handler = (e) => setStandalone(e.matches || window.navigator.standalone === true)
+    mq.addEventListener?.('change', handler)
+
+    // Add class to body for CSS fallback
+    if (standalone || window.navigator.standalone) {
+      document.body.classList.add('standalone')
+    }
+
+    return () => mq.removeEventListener?.('change', handler)
+  }, [standalone])
+
+  return standalone
+}
+
+function PhoneApp({ isStandalone }) {
   const { currentScreen, syncingState, profileOpen, setProfileOpen } = useApp()
 
   const screens = {
@@ -34,6 +61,9 @@ function PhoneApp() {
         <div className="dynamic-island" />
 
         <StatusBar />
+
+        {/* D360 panel embedded inside phone frame in standalone mode */}
+        {isStandalone && <D360Panel />}
 
         {/* Screen content */}
         <div className="screen-scroll" key={currentScreen}>
@@ -71,12 +101,15 @@ function DemoNote() {
 }
 
 export default function App() {
+  const isStandalone = useIsStandalone()
+
   return (
     <AppProvider>
-      <D360Panel />
-      <PhoneApp />
-      <DemoPersonas />
-      <DemoNote />
+      {/* D360 panel outside phone frame in browser mode */}
+      {!isStandalone && <D360Panel />}
+      <PhoneApp isStandalone={isStandalone} />
+      {!isStandalone && <DemoPersonas />}
+      {!isStandalone && <DemoNote />}
     </AppProvider>
   )
 }
