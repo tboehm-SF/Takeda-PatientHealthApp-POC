@@ -1,6 +1,6 @@
 export default function StatusBar() {
   return (
-    <div className="flex items-center justify-between px-6 pt-16 pb-1 bg-white flex-shrink-0">
+    <div className="status-bar flex items-center justify-between px-6 pt-16 pb-1 bg-white flex-shrink-0">
       <span className="text-[15px] font-semibold text-gray-900 tracking-tight">9:41</span>
       <div className="flex items-center gap-1.5">
         {/* Signal bars */}
