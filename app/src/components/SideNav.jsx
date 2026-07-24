@@ -93,8 +93,6 @@ export default function SideNav() {
           <div className="side-nav-links">
             <a
               href="/architecture.html#enrichment"
-              target="_blank"
-              rel="noopener noreferrer"
               className="side-nav-link"
             >
               <span className="side-nav-link-icon">⚡</span>
@@ -102,8 +100,6 @@ export default function SideNav() {
             </a>
             <a
               href="/architecture.html#datamodel"
-              target="_blank"
-              rel="noopener noreferrer"
               className="side-nav-link"
             >
               <span className="side-nav-link-icon">🗂️</span>
