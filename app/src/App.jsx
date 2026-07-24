@@ -103,13 +103,9 @@ function DemoNote() {
 function SideNav() {
   return (
     <div className="side-nav">
-      <a href="/architecture.html" className="side-nav-btn" target="_blank" rel="noopener noreferrer">
-        <span className="side-nav-icon">🏗️</span>
-        <span className="side-nav-label">ARCHITECTURE</span>
-      </a>
       <a href="/architecture.html#enrichment" className="side-nav-btn" target="_blank" rel="noopener noreferrer">
         <span className="side-nav-icon">🔬</span>
-        <span className="side-nav-label">ENRICHMENT</span>
+        <span className="side-nav-label">ARCHITECTURE</span>
       </a>
       <a href="/architecture.html#datamodel" className="side-nav-btn" target="_blank" rel="noopener noreferrer">
         <span className="side-nav-icon">📊</span>
