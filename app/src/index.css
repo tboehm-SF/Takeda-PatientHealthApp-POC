@@ -552,6 +552,52 @@
     font-size: 14px;
   }
 
+  /* ─────── Side Navigation (left side, Takeda brand) ─────── */
+  .side-nav {
+    position: fixed;
+    left: 20px;
+    bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 100;
+  }
+
+  .side-nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: #BD120A;
+    color: #FFFFFF;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: 1px solid #BD120A;
+    border-radius: 0px 0px 0px 16px;
+    transition: background 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 14px rgba(189, 18, 10, 0.25);
+    min-width: 160px;
+  }
+
+  .side-nav-btn:hover {
+    background: #8A0D07;
+    border-color: #8A0D07;
+    box-shadow: 0 6px 20px rgba(189, 18, 10, 0.35);
+  }
+
+  .side-nav-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .side-nav-label {
+    white-space: nowrap;
+  }
+
   /* ─────── Demo Personas panel (right side) ─────── */
   .demo-personas {
     position: fixed;
@@ -717,7 +763,7 @@
 
   /* Hide D360 + demo note + personas on screens narrower than the phone + panel */
   @media (max-width: 800px) {
-    .d360-badge, .d360-panel, .demo-note, .demo-personas { display: none; }
+    .d360-badge, .d360-panel, .demo-note, .demo-personas, .side-nav { display: none; }
   }
 
   /* ─────── Standalone PWA mode ─────── */
@@ -740,7 +786,7 @@
   /* Shared standalone rules (media query + JS class fallback) */
   @media (display-mode: standalone) {
     /* Hide all demo chrome */
-    .demo-note, .demo-personas { display: none !important; }
+    .demo-note, .demo-personas, .side-nav { display: none !important; }
 
     /* Remove fake phone bezel — let content fill screen */
     .phone-frame {
@@ -794,7 +840,8 @@
 
   /* iOS standalone fallback (class added by JS for older Safari) */
   body.standalone .demo-note,
-  body.standalone .demo-personas { display: none !important; }
+  body.standalone .demo-personas,
+  body.standalone .side-nav { display: none !important; }
 
   body.standalone .phone-frame {
     width: 100vw; height: 100vh;

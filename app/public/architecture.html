@@ -262,6 +262,7 @@ svg text { pointer-events: none; user-select: none; }
       <button onclick="showTab('rest')" id="tab-rest" class="tab-btn">✨ Platform Capabilities</button>
       <button onclick="showTab('benefits')" id="tab-benefits" class="tab-btn">📈 Business Value</button>
       <button onclick="showTab('enrichment')" id="tab-enrichment" class="tab-btn">🔬 Architecture Enrichment</button>
+      <button onclick="showTab('datamodel')" id="tab-datamodel" class="tab-btn">📊 Data Model</button>
     </div>
   </div>
 </nav>
@@ -3686,6 +3687,104 @@ TOTAL ANNUAL BENEFIT: $14M + $17.5M = $31.5M/year</pre>
 
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- DATA MODEL TAB — JointJS Interactive Diagram                       -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div id="panel-datamodel" class="tab-panel hidden">
+
+  <!-- Header -->
+  <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-10 mb-10 border border-indigo-200/60">
+    <div class="flex items-center gap-4 mb-4">
+      <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-3xl shadow-lg">📊</div>
+      <div>
+        <h2 class="text-3xl font-black" style="color:#0F172A">Salesforce Data Model</h2>
+        <p class="text-sm mt-1" style="color:#64748b">Interactive diagram — hover over objects to see key fields, purpose, and data flow</p>
+      </div>
+    </div>
+    <p class="text-sm leading-relaxed mt-4" style="color:#475569">
+      Object residency across <strong style="color:#2563eb">Salesforce Core / Health Cloud</strong>,
+      <strong style="color:#7c3aed">Data Cloud</strong>,
+      <strong style="color:#059669">MC Next on Core</strong>, and
+      <strong style="color:#d97706">Agentforce</strong>.
+      Arrows show data flow direction. <strong>Hover over any object</strong> to see its key fields and purpose.
+    </p>
+  </div>
+
+  <!-- JointJS Data Model Diagram Container -->
+  <div class="relative mb-10">
+    <div id="jointjs-datamodel" style="width:100%; height:820px; border-radius:16px; overflow:hidden; border:2px solid #e2e8f0; background:#f8fafc;"></div>
+
+    <!-- Custom Tooltip Overlay for Data Model -->
+    <div id="datamodel-tooltip" class="hidden" style="position:absolute; z-index:100; max-width:420px; pointer-events:none;">
+      <div style="background:white; border-radius:12px; padding:20px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); border:2px solid #e2e8f0;">
+        <div id="dm-tooltip-header" style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+          <div id="dm-tooltip-icon" style="width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px;"></div>
+          <div>
+            <div id="dm-tooltip-title" style="font-weight:800; font-size:15px; color:#0F172A;"></div>
+            <div id="dm-tooltip-system" style="font-size:11px; color:#64748b; margin-top:2px;"></div>
+          </div>
+        </div>
+        <div style="background:#F0F9FF; border-radius:8px; padding:10px 12px; margin-bottom:10px; border-left:3px solid #3B82F6;">
+          <div style="font-size:10px; font-weight:700; color:#1E3A5F; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Key Fields</div>
+          <div id="dm-tooltip-fields" style="font-size:12px; color:#1E3A5F; line-height:1.6; font-family:'SF Mono','Fira Code',monospace;"></div>
+        </div>
+        <div style="background:#F8FAFC; border-radius:8px; padding:10px 12px; border-left:3px solid #94A3B8;">
+          <div style="font-size:10px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Purpose</div>
+          <div id="dm-tooltip-purpose" style="font-size:13px; color:#334155; line-height:1.5;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-10 text-xs">
+    <div class="flex items-center gap-2">
+      <div class="w-6 h-6 rounded" style="background:#1F293720; border:2px solid #1F2937;"></div>
+      <span style="color:#64748b">Mobile App (Patient)</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="w-6 h-6 rounded" style="background:rgba(37,99,235,0.15); border:2px solid #2563EB;"></div>
+      <span style="color:#64748b">Salesforce Core / Health Cloud</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="w-6 h-6 rounded" style="background:rgba(124,58,237,0.15); border:2px solid #7C3AED;"></div>
+      <span style="color:#64748b">Data Cloud</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="w-6 h-6 rounded" style="background:rgba(5,150,105,0.15); border:2px solid #059669;"></div>
+      <span style="color:#64748b">MC Next on Core</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="w-6 h-6 rounded" style="background:rgba(217,119,6,0.15); border:2px solid #D97706;"></div>
+      <span style="color:#64748b">Agentforce</span>
+    </div>
+  </div>
+
+  <!-- Object Reference Table -->
+  <div class="rounded-xl border border-gray-200 overflow-hidden mb-10">
+    <div style="padding:20px 24px; background:#f8fafc; border-bottom:1px solid #e2e8f0;">
+      <h3 class="text-lg font-bold" style="color:#0F172A">Object Reference</h3>
+    </div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse; font-size:12.5px;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:10px 14px; background:#f8fafc; color:#64748b; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; border-bottom:1.5px solid #e2e8f0; width:180px;">Object</th>
+            <th style="text-align:left; padding:10px 14px; background:#f8fafc; color:#64748b; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; border-bottom:1.5px solid #e2e8f0; width:150px;">System</th>
+            <th style="text-align:left; padding:10px 14px; background:#f8fafc; color:#64748b; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; border-bottom:1.5px solid #e2e8f0; width:120px;">Type</th>
+            <th style="text-align:left; padding:10px 14px; background:#f8fafc; color:#64748b; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; border-bottom:1.5px solid #e2e8f0;">Key Fields</th>
+            <th style="text-align:left; padding:10px 14px; background:#f8fafc; color:#64748b; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; border-bottom:1.5px solid #e2e8f0;">Purpose</th>
+          </tr>
+        </thead>
+        <tbody id="dm-ref-table-body">
+          <!-- Populated by JS from data model data -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
 </main>
 
 <!-- JointJS CDN (v4.x — zero dependencies, no CSS needed) -->
@@ -3719,28 +3818,24 @@ function showTab(tabName) {
   }
 }
 
-// Initialize on load
+// Initialize on load — support hash-based tab routing
 window.addEventListener('DOMContentLoaded', () => {
-  showTab('architecture');
+  const hash = window.location.hash.replace('#', '');
+  const validTabs = ['architecture', 'security', 'rest', 'benefits', 'enrichment', 'datamodel'];
+  if (hash && validTabs.includes(hash)) {
+    showTab(hash);
+  } else {
+    showTab('architecture');
+  }
 });
 
-// Print handler
-window.addEventListener('beforeprint', () => {
-  // Show all tabs content for printing
-  document.querySelectorAll('.tab-panel').forEach(p => {
-    p.classList.remove('hidden');
-    p.style.display = 'block';
-  });
-  // Open all detail panels
-  document.querySelectorAll('.detail-panel').forEach(p => p.classList.add('open'));
-});
-
-window.addEventListener('afterprint', () => {
-  // Restore tab visibility
-  showTab('architecture');
-  document.querySelectorAll('.tab-panel').forEach(p => {
-    p.style.display = '';
-  });
+// Listen for hash changes (e.g., from side nav links)
+window.addEventListener('hashchange', () => {
+  const hash = window.location.hash.replace('#', '');
+  const validTabs = ['architecture', 'security', 'rest', 'benefits', 'enrichment', 'datamodel'];
+  if (hash && validTabs.includes(hash)) {
+    showTab(hash);
+  }
 });
 
 // ═══════════════════════════════════════════════════════════════════
@@ -4041,12 +4136,455 @@ function initEnrichmentDiagram() {
   });
 }
 
-// Lazy-load diagram when enrichment tab is first shown
+// ═══════════════════════════════════════════════════════════════════
+// JOINTJS DATA MODEL DIAGRAM
+// ═══════════════════════════════════════════════════════════════════
+
+let datamodelDiagramInitialized = false;
+
+function initDataModelDiagram() {
+  if (datamodelDiagramInitialized) return;
+  if (typeof joint === 'undefined') {
+    setTimeout(initDataModelDiagram, 200);
+    return;
+  }
+  datamodelDiagramInitialized = true;
+
+  const namespace = joint.shapes;
+  const graph = new joint.dia.Graph({}, { cellNamespace: namespace });
+  const paperEl = document.getElementById('jointjs-datamodel');
+  if (!paperEl) return;
+
+  const CANVAS_W = 1760;
+  const CANVAS_H = 820;
+
+  const paper = new joint.dia.Paper({
+    el: paperEl,
+    model: graph,
+    width: paperEl.clientWidth || CANVAS_W,
+    height: CANVAS_H,
+    gridSize: 1,
+    cellViewNamespace: namespace,
+    background: { color: '#f8fafc' },
+    interactive: false,
+    defaultConnectionPoint: { name: 'boundary' }
+  });
+
+  // Responsive resize
+  const ro = new ResizeObserver(() => {
+    const w = paperEl.clientWidth;
+    if (w > 0) {
+      paper.setDimensions(w, CANVAS_H);
+      const sx = w / CANVAS_W;
+      paper.scale(Math.min(sx, 1), Math.min(sx, 1));
+    }
+  });
+  ro.observe(paperEl);
+
+  // ── Helpers ──
+  function dmNode(x, y, w, h, label, sublabel, fillColor, strokeColor, meta) {
+    const el = new joint.shapes.standard.Rectangle();
+    el.position(x, y);
+    el.resize(w, h);
+    el.attr({
+      body: {
+        fill: fillColor,
+        stroke: strokeColor,
+        strokeWidth: 2.5,
+        rx: 10, ry: 10,
+        filter: meta ? { name: 'dropShadow', args: { dx: 0, dy: 4, blur: 12, color: strokeColor + '40' } } : undefined
+      },
+      label: {
+        text: label + (sublabel ? '\n' + sublabel : ''),
+        fill: '#FFFFFF',
+        fontSize: sublabel ? 11 : 12,
+        fontWeight: 600,
+        fontFamily: "'Montserrat', 'Helvetica Neue', sans-serif",
+        textWrap: { width: w - 16, height: h - 8, ellipsis: true }
+      }
+    });
+    if (meta) el.set('dmMeta', meta);
+    el.addTo(graph);
+    return el;
+  }
+
+  function dmZone(x, y, w, h, label, sublabel, color) {
+    const zone = new joint.shapes.standard.Rectangle();
+    zone.position(x, y);
+    zone.resize(w, h);
+    zone.attr({
+      body: { fill: color + '08', stroke: color, strokeWidth: 3, strokeDasharray: '12 6', rx: 16, ry: 16 },
+      label: { text: '' }
+    });
+    zone.addTo(graph);
+
+    const title = new joint.shapes.standard.Rectangle();
+    title.position(x + 16, y + 10);
+    title.resize(w - 32, 36);
+    title.attr({
+      body: { fill: 'transparent', stroke: 'none' },
+      label: { text: label + '  ' + sublabel, fill: color, fontSize: 12, fontWeight: 800, fontFamily: "'Montserrat', sans-serif", textAnchor: 'start', refX: 5, textVerticalAnchor: 'middle' }
+    });
+    title.addTo(graph);
+  }
+
+  function dmLink(source, target, color, dashed, label) {
+    const link = new joint.shapes.standard.Link();
+    link.source(source);
+    link.target(target);
+    link.attr({
+      line: {
+        stroke: color,
+        strokeWidth: 2,
+        strokeDasharray: dashed ? '8 4' : '0',
+        targetMarker: { type: 'path', d: 'M 10 -5 0 0 10 5 z', fill: color, stroke: color }
+      }
+    });
+    if (label) {
+      link.appendLabel({
+        attrs: {
+          text: { text: label, fill: color, fontSize: 9, fontWeight: 700, fontFamily: "'Montserrat', sans-serif" },
+          rect: { fill: '#f8fafc', stroke: 'none', rx: 3, ry: 3 }
+        },
+        position: { distance: 0.5 }
+      });
+    }
+    link.addTo(graph);
+    return link;
+  }
+
+  // ═══════════════════════════════════════
+  // ZONES
+  // ═══════════════════════════════════════
+  dmZone(20, 10, 280, 780, '📱 MOBILE APP', '(Patient)', '#1F2937');
+  dmZone(330, 10, 500, 780, '🏥 HEALTH CLOUD', 'Salesforce Core · Clinical SoR', '#2563EB');
+  dmZone(860, 10, 460, 780, '☁️ DATA CLOUD', 'Unified Individual · Analytics', '#7C3AED');
+  dmZone(1350, 10, 190, 380, '📬 MC NEXT', 'On Core', '#059669');
+  dmZone(1350, 410, 190, 380, '🤖 AGENTFORCE', 'AI Agents', '#D97706');
+
+  // ═══════════════════════════════════════
+  // MOBILE APP NODES
+  // ═══════════════════════════════════════
+  const mNRS = dmNode(40, 70, 240, 50, '📋 NRS Check-in', '0–10 slider', '#374151', '#1F2937', {
+    title: 'NRS Check-in', system: 'Mobile App · Patient Input', icon: '📋', color: '#1F2937',
+    fields: 'score (0–10), patientId, submittedAt',
+    purpose: 'Patient moves the 0–10 slider and taps "Save NRS score". App POSTs to the backend, which writes NRS Score to Health Cloud.'
+  });
+  const mPSO = dmNode(40, 140, 240, 50, '📊 PsOdisk Assessment', '10 domains', '#374151', '#1F2937', {
+    title: 'PsOdisk Assessment', system: 'Mobile App · Patient Input', icon: '📊', color: '#1F2937',
+    fields: 'domains[10] (0–10 each), patientId, submittedAt',
+    purpose: 'Patient completes 10-domain flow. Backend writes PsOdisk Assessment + 10 child Domain Score records in a single transaction.'
+  });
+  const mDOS = dmNode(40, 210, 240, 50, '💊 Dose Confirmation', 'Daily tap', '#374151', '#1F2937', {
+    title: 'Dose Confirmation', system: 'Mobile App · Patient Input', icon: '💊', color: '#1F2937',
+    fields: 'confirmed (bool), patientId, confirmedAt',
+    purpose: 'Patient taps "I took my dose". Dose Confirmation written to Health Cloud. Missed confirmations tracked after daily cutoff.'
+  });
+  const mChat = dmNode(40, 280, 240, 50, '💬 Agentforce Chat', 'In-app AI', '#374151', '#1F2937', {
+    title: 'Agentforce Chat', system: 'Mobile App · Patient Input', icon: '💬', color: '#1F2937',
+    fields: 'message, sessionId, patientId',
+    purpose: 'Floating chat bubble on every screen. Calls Agentforce API through the backend proxy.'
+  });
+  const mEdu = dmNode(40, 350, 240, 50, '📖 Education Hub', 'Personalized content', '#374151', '#1F2937', {
+    title: 'Education Hub View', system: 'Mobile App · UI', icon: '📖', color: '#1F2937',
+    fields: 'rankedContentIds[], contentItems[]',
+    purpose: 'Receives ranked content JSON from personalization engine. Education Hub re-renders with the personalised card order.'
+  });
+
+  // ═══════════════════════════════════════
+  // HEALTH CLOUD NODES
+  // ═══════════════════════════════════════
+  const hCON = dmNode(360, 65, 180, 50, '👤 Contact', 'Patient Identity', '#1E3A8A', '#2563EB', {
+    title: 'Contact', system: 'Health Cloud · Standard', icon: '👤', color: '#2563EB',
+    fields: 'Id, Name, DOB',
+    purpose: 'Core patient identity record. Anchor for all clinical and engagement data.'
+  });
+  const hENR = dmNode(570, 65, 230, 50, '📋 CareProgram Enrollment', 'Zasocitinib', '#1E3A8A', '#2563EB', {
+    title: 'CareProgram Enrollment', system: 'Health Cloud · HC Standard', icon: '📋', color: '#2563EB',
+    fields: 'Contact__c, CareProgram, StartDate, Status',
+    purpose: 'Links the patient to the zasocitinib programme. Controls which content is eligible.'
+  });
+  const hTRT = dmNode(570, 135, 230, 50, '💉 Treatment Record', 'Custom', '#1E3A8A', '#2563EB', {
+    title: 'Treatment Record __c', system: 'Health Cloud · Custom', icon: '💉', color: '#2563EB',
+    fields: 'Contact__c, Drug__c, DoseStrength__c, StartDate__c, TargetWeeks__c',
+    purpose: 'Prescription details for zasocitinib 15mg once daily. Source of truth for dose schedule.'
+  });
+  const hNRS = dmNode(360, 205, 200, 50, '📈 NRS Score', 'Custom', '#1E3A8A', '#2563EB', {
+    title: 'NRS Score __c', system: 'Health Cloud · Custom', icon: '📈', color: '#2563EB',
+    fields: 'Contact__c, Score__c (0–10), SubmittedAt__c',
+    purpose: 'Daily patient-reported itch score. Primary personalisation trigger. Streams to Data Cloud on write.'
+  });
+  const hPSO = dmNode(590, 205, 210, 50, '🎯 PsOdisk Assessment', 'Custom', '#1E3A8A', '#2563EB', {
+    title: 'PsOdisk Assessment __c', system: 'Health Cloud · Custom', icon: '🎯', color: '#2563EB',
+    fields: 'Contact__c, AssessmentDate__c, OverallScore__c',
+    purpose: 'Container record for the 10-domain daily assessment. Parent of Domain Score records.'
+  });
+  const hPSD = dmNode(590, 275, 210, 50, '📊 Domain Score', 'Custom', '#1E3A8A', '#2563EB', {
+    title: 'PsOdisk Domain Score __c', system: 'Health Cloud · Custom', icon: '📊', color: '#2563EB',
+    fields: 'Assessment__c, Domain__c (picklist), Score__c (0–10)',
+    purpose: 'One child record per domain per assessment (10 per session). Domains: itch, pain, sleep, emotional, body, social, work, etc.'
+  });
+  const hDOS = dmNode(360, 345, 200, 50, '💊 Dose Confirmation', 'Custom', '#1E3A8A', '#2563EB', {
+    title: 'Dose Confirmation __c', system: 'Health Cloud · Custom', icon: '💊', color: '#2563EB',
+    fields: 'Contact__c, ConfirmedAt__c, Missed__c',
+    purpose: 'Daily dose tracking. Feeds adherence stream in Data Cloud. Triggers At-Risk alert on 2+ missed.'
+  });
+  const hDLQ = dmNode(590, 345, 210, 50, '📝 DLQI Assessment', 'Custom', '#1E3A8A', '#2563EB', {
+    title: 'DLQI Assessment __c', system: 'Health Cloud · Custom', icon: '📝', color: '#2563EB',
+    fields: 'Contact__c, Score__c (0–30), AssessmentDate__c',
+    purpose: 'Dermatology Life Quality Index. Completed by patient every 4–6 weeks. Tracked on Progress screen.'
+  });
+  const hMIL = dmNode(360, 485, 200, 50, '🏆 Milestone', 'Custom', '#1E3A8A', '#2563EB', {
+    title: 'Milestone __c', system: 'Health Cloud · Custom', icon: '🏆', color: '#2563EB',
+    fields: 'Contact__c, MilestoneType__c, EarnedDate__c',
+    purpose: 'Achievement badges: 21-day streak, DLQI improvement, PASI 75 at Week 12. Shown on Progress screen.'
+  });
+  const hREF = dmNode(590, 485, 210, 50, '💊 Refill Request', 'Custom', '#1E3A8A', '#2563EB', {
+    title: 'Refill Request __c', system: 'Health Cloud · Custom', icon: '💊', color: '#2563EB',
+    fields: 'Contact__c, DaysRemaining__c, RequestedAt__c, Status__c',
+    purpose: 'Medication refill workflow. Support screen shows alert when <14 days remaining.'
+  });
+  const hNAL = dmNode(360, 555, 440, 55, '🚨 Navigator Alert', 'Custom', '#1E3A8A', '#2563EB', {
+    title: 'Navigator Alert __c', system: 'Health Cloud · Custom', icon: '🚨', color: '#2563EB',
+    fields: 'Contact__c, AlertType__c, Severity__c, Status__c, AgentSuggestion__c',
+    purpose: 'Patient Navigator command centre queue. Created by Data Cloud At-Risk segment. Navigator reviews → one-click approve → Agentforce executes outreach.'
+  });
+
+  // ═══════════════════════════════════════
+  // DATA CLOUD NODES
+  // ═══════════════════════════════════════
+  const dUNI = dmNode(900, 65, 380, 55, '🔮 Unified Individual', 'Patient 360 · Identity Resolution', '#3B0764', '#7C3AED', {
+    title: 'Unified Individual', system: 'Data Cloud · DMO Standard', icon: '🔮', color: '#7C3AED',
+    fields: 'UnifiedRecordId, ContactPointEmail, SourceObjectId',
+    purpose: 'Identity-resolved patient across all Health Cloud sources. Anchor for all Data Cloud processing.'
+  });
+  const dNRS = dmNode(890, 175, 190, 50, '📈 NRS Score Stream', 'DMO Custom', '#3B0764', '#7C3AED', {
+    title: 'NRS Score Stream DMO', system: 'Data Cloud · DMO Custom', icon: '📈', color: '#7C3AED',
+    fields: 'IndividualId, Score, SubmittedAt, WeekOnTherapy',
+    purpose: 'Ingested from NRS Score __c via HC streaming connector. Source for NRS Trend Calculated Insight.'
+  });
+  const dPSO = dmNode(1100, 175, 190, 50, '📊 Assessment Stream', 'DMO Custom', '#3B0764', '#7C3AED', {
+    title: 'Assessment Stream DMO', system: 'Data Cloud · DMO Custom', icon: '📊', color: '#7C3AED',
+    fields: 'IndividualId, Domain, DomainScore, AssessmentDate',
+    purpose: 'Ingested from PsOdisk Domain Score __c. Source for Engagement Score CI.'
+  });
+  const dADH = dmNode(890, 250, 190, 50, '💊 Adherence Stream', 'DMO Custom', '#3B0764', '#7C3AED', {
+    title: 'Adherence Stream DMO', system: 'Data Cloud · DMO Custom', icon: '💊', color: '#7C3AED',
+    fields: 'IndividualId, ConfirmedAt, Missed, ConsecutiveMissed',
+    purpose: 'Ingested from Dose Confirmation __c. Feeds both Engagement Score CI and adherence rate calculation.'
+  });
+  const dNRSCI = dmNode(890, 370, 190, 55, '📉 NRS Trend', 'Calculated Insight', '#3B0764', '#7C3AED', {
+    title: 'NRS Trend (Calc. Insight)', system: 'Data Cloud · Calculated Insight', icon: '📉', color: '#7C3AED',
+    fields: 'IndividualId, AvgNRS_3d, AvgNRS_7d, TrendDirection',
+    purpose: 'Rolling 3-day and 7-day NRS averages. Qualifies patients into High NRS Segment when AvgNRS_3d ≥ 7.'
+  });
+  const dENGCI = dmNode(1100, 370, 190, 55, '⚡ Engagement Score', 'Calculated Insight', '#3B0764', '#7C3AED', {
+    title: 'Engagement Score (Calc. Insight)', system: 'Data Cloud · Calculated Insight', icon: '⚡', color: '#7C3AED',
+    fields: 'IndividualId, AdherenceRate, MissedDoses_7d, EmotionalScore, RiskScore',
+    purpose: 'Multi-signal engagement score. Combines dose adherence, NRS trend, and PsOdisk emotional domain. Qualifies At-Risk Segment.'
+  });
+  const dSEG1 = dmNode(890, 490, 190, 55, '🔴 High NRS Segment', 'AvgNRS_3d ≥ 7', '#3B0764', '#7C3AED', {
+    title: 'High NRS Segment', system: 'Data Cloud · Segment', icon: '🔴', color: '#7C3AED',
+    fields: 'Rule: AvgNRS_3d ≥ 7',
+    purpose: 'Triggers itch management content personalisation via MC Next Personalisation Rule. Real-time evaluation after every NRS submission.'
+  });
+  const dSEG2 = dmNode(1100, 490, 190, 55, '⚠️ At-Risk Segment', 'Multi-signal', '#3B0764', '#7C3AED', {
+    title: 'At-Risk Segment', system: 'Data Cloud · Segment', icon: '⚠️', color: '#7C3AED',
+    fields: 'Rule: MissedDoses_7d ≥ 2 OR NRS trend up 5d OR EmotionalScore < 3 OR 7d no activity',
+    purpose: 'Triggers creation of Navigator Alert __c in Health Cloud. Routes to Patient Navigator command centre + Agentforce proactive outreach queue.'
+  });
+
+  // ═══════════════════════════════════════
+  // MC NEXT NODES
+  // ═══════════════════════════════════════
+  const mcCont = dmNode(1370, 65, 150, 50, '📄 Content Item', '', '#064E3B', '#059669', {
+    title: 'Content Item', system: 'MC Next on Core · MC Object', icon: '📄', color: '#059669',
+    fields: 'ContentId, Title, Category, Tag, ReadTime, TriggerConditions',
+    purpose: 'Educational articles, guides, and resources. 15 items in demo library. Each has trigger conditions for personalisation rule matching.'
+  });
+  const mcRule = dmNode(1370, 145, 150, 50, '🎯 P13n Rule', '', '#064E3B', '#059669', {
+    title: 'Personalisation Rule', system: 'MC Next on Core · MC Object', icon: '🎯', color: '#059669',
+    fields: 'SegmentId, ContentIds[], Priority, Context',
+    purpose: 'Maps Data Cloud segments to ranked content items. Activated when HC receives a segment membership event.'
+  });
+  const mcRec = dmNode(1370, 225, 150, 50, '📬 Recommendation', 'API Response', '#064E3B', '#059669', {
+    title: 'Content Recommendation', system: 'MC Next on Core · API Response', icon: '📬', color: '#059669',
+    fields: 'RankedContentIds[], PatientContext, GeneratedAt',
+    purpose: 'Ranked JSON payload returned by MC Next personalisation API after check-in POST.'
+  });
+
+  // ═══════════════════════════════════════
+  // AGENTFORCE NODES
+  // ═══════════════════════════════════════
+  const afPS = dmNode(1370, 460, 150, 55, '🤖 Patient Support', 'Agent', '#78350F', '#D97706', {
+    title: 'Patient Support Agent', system: 'Agentforce · Agent', icon: '🤖', color: '#D97706',
+    fields: 'Actions: answer_faq, check_dose_history, escalate_to_nurse, summarise_report',
+    purpose: 'Powers the in-app chat. Handles patient queries 24/7, proactively nudges on missed check-ins, and summarises health reports.'
+  });
+  const afNV = dmNode(1370, 540, 150, 55, '👨‍⚕️ Navigator', 'Agent', '#78350F', '#D97706', {
+    title: 'Navigator Agent', system: 'Agentforce · Agent', icon: '👨‍⚕️', color: '#D97706',
+    fields: 'Actions: review_alert, approve_outreach, draft_message',
+    purpose: 'Surfaces in the Patient Navigator command centre. Processes At-Risk queue, drafts personalised outreach messages.'
+  });
+  const afOut = dmNode(1370, 620, 150, 55, '📤 Proactive Outreach', 'Action', '#78350F', '#D97706', {
+    title: 'Proactive Outreach Action', system: 'Agentforce · Agent Action', icon: '📤', color: '#D97706',
+    fields: 'PatientId, Channel, MessageTemplate, ApprovedBy, SentAt',
+    purpose: 'Navigator-approved outreach executed by Agentforce. Sends SMS, email, or push based on patient preference.'
+  });
+
+  // ═══════════════════════════════════════
+  // LINKS — Data Flows
+  // ═══════════════════════════════════════
+
+  // App → HC
+  dmLink(mNRS, hNRS, '#2563EB', false, 'REST API');
+  dmLink(mPSO, hPSO, '#2563EB', false, 'REST API');
+  dmLink(mDOS, hDOS, '#2563EB', false, 'REST API');
+  dmLink(mChat, afPS, '#D97706', true, 'Agentforce API');
+
+  // HC internal
+  dmLink(hCON, hENR, '#2563EB', true);
+  dmLink(hCON, hTRT, '#2563EB', true);
+  dmLink(hPSO, hPSD, '#2563EB', true);
+
+  // HC → Data Cloud (streaming)
+  dmLink(hCON, dUNI, '#7C3AED', false, 'Identity Resolution');
+  dmLink(hNRS, dNRS, '#7C3AED', true, 'Streaming');
+  dmLink(hPSD, dPSO, '#7C3AED', true, 'Streaming');
+  dmLink(hDOS, dADH, '#7C3AED', true, 'Streaming');
+
+  // DC internal flows
+  dmLink(dNRS, dNRSCI, '#7C3AED', true);
+  dmLink(dPSO, dENGCI, '#7C3AED', true);
+  dmLink(dADH, dENGCI, '#7C3AED', true);
+  dmLink(dNRSCI, dSEG1, '#7C3AED', false);
+  dmLink(dENGCI, dSEG2, '#7C3AED', false);
+
+  // DC → MC Next / HC
+  dmLink(dSEG1, mcRule, '#059669', false, 'Triggers P13n');
+  dmLink(dSEG2, hNAL, '#2563EB', false, 'Creates Alert');
+
+  // MC Next internal + outputs
+  dmLink(mcRule, mcRec, '#059669', true);
+  dmLink(mcRec, mEdu, '#059669', false, 'Ranked Content');
+
+  // Agentforce flows
+  dmLink(hNAL, afNV, '#D97706', false, 'Navigator Queue');
+  dmLink(afNV, afOut, '#D97706', true);
+  dmLink(afOut, mNRS, '#D97706', true, 'SMS / Push / Email');
+
+  // ═══════════════════════════════════════
+  // TOOLTIP SYSTEM
+  // ═══════════════════════════════════════
+  const dmTooltipEl = document.getElementById('datamodel-tooltip');
+  const dmPaperContainer = document.getElementById('jointjs-datamodel');
+
+  paper.on('element:mouseenter', function(elementView) {
+    const model = elementView.model;
+    const data = model.get('dmMeta');
+    if (!data) return;
+
+    elementView.model.attr('body/strokeWidth', 4);
+    elementView.model.attr('body/filter', {
+      name: 'dropShadow', args: { dx: 0, dy: 6, blur: 20, color: data.color + '80' }
+    });
+
+    document.getElementById('dm-tooltip-title').textContent = data.title;
+    document.getElementById('dm-tooltip-system').textContent = data.system;
+    document.getElementById('dm-tooltip-icon').textContent = data.icon;
+    document.getElementById('dm-tooltip-icon').style.background = data.color + '20';
+    document.getElementById('dm-tooltip-fields').textContent = data.fields;
+    document.getElementById('dm-tooltip-purpose').textContent = data.purpose;
+
+    const bbox = elementView.getBBox();
+    const scale = paper.scale().sx;
+
+    let left = (bbox.x + bbox.width) * scale + 16;
+    let top = bbox.y * scale;
+
+    if (left + 420 > dmPaperContainer.clientWidth) {
+      left = bbox.x * scale - 436;
+    }
+    if (left < 10) left = 10;
+    if (top < 10) top = 10;
+    if (top + 280 > CANVAS_H) top = CANVAS_H - 280;
+
+    dmTooltipEl.style.left = left + 'px';
+    dmTooltipEl.style.top = top + 'px';
+    dmTooltipEl.classList.remove('hidden');
+  });
+
+  paper.on('element:mouseleave', function(elementView) {
+    const model = elementView.model;
+    const data = model.get('dmMeta');
+    if (data) {
+      elementView.model.attr('body/strokeWidth', 2.5);
+      elementView.model.attr('body/filter', {
+        name: 'dropShadow', args: { dx: 0, dy: 4, blur: 12, color: (data.color || '#000') + '40' }
+      });
+    }
+    dmTooltipEl.classList.add('hidden');
+  });
+
+  // ── Populate reference table ──
+  const allObjects = [
+    { name: 'NRS Check-in', system: 'Mobile App', sysClass: 'app', type: 'Patient Input', fields: 'score (0–10), patientId, submittedAt', purpose: 'Patient slider → backend POST → NRS Score __c in Health Cloud' },
+    { name: 'PsOdisk Assessment', system: 'Mobile App', sysClass: 'app', type: 'Patient Input', fields: 'domains[10], patientId, submittedAt', purpose: '10-domain flow → backend writes Assessment + Domain records' },
+    { name: 'Dose Confirmation', system: 'Mobile App', sysClass: 'app', type: 'Patient Input', fields: 'confirmed, patientId, confirmedAt', purpose: '"I took my dose" tap → Dose Confirmation __c' },
+    { name: 'Agentforce Chat', system: 'Mobile App', sysClass: 'app', type: 'Patient Input', fields: 'message, sessionId, patientId', purpose: 'Floating chat → Agentforce API via backend proxy' },
+    { name: 'Education Hub', system: 'Mobile App', sysClass: 'app', type: 'App UI', fields: 'rankedContentIds[], contentItems[]', purpose: 'Receives ranked JSON from MC Next personalisation' },
+    { name: 'Contact', system: 'Health Cloud', sysClass: 'hc', type: 'Standard', fields: 'Id, Name, DOB', purpose: 'Core patient identity — anchor for all data' },
+    { name: 'CareProgram Enrollment', system: 'Health Cloud', sysClass: 'hc', type: 'HC Standard', fields: 'Contact__c, CareProgram, StartDate, Status', purpose: 'Links patient to zasocitinib programme' },
+    { name: 'Treatment Record __c', system: 'Health Cloud', sysClass: 'hc', type: 'Custom', fields: 'Contact__c, Drug__c, DoseStrength__c, StartDate__c', purpose: 'Zasocitinib 15mg prescription details' },
+    { name: 'NRS Score __c', system: 'Health Cloud', sysClass: 'hc', type: 'Custom', fields: 'Contact__c, Score__c (0–10), SubmittedAt__c', purpose: 'Daily itch score — primary P13n trigger → streams to DC' },
+    { name: 'PsOdisk Assessment __c', system: 'Health Cloud', sysClass: 'hc', type: 'Custom', fields: 'Contact__c, AssessmentDate__c, OverallScore__c', purpose: '10-domain container — parent of Domain Scores' },
+    { name: 'PsOdisk Domain Score __c', system: 'Health Cloud', sysClass: 'hc', type: 'Custom', fields: 'Assessment__c, Domain__c, Score__c', purpose: 'One child per domain per assessment (10 per session)' },
+    { name: 'Dose Confirmation __c', system: 'Health Cloud', sysClass: 'hc', type: 'Custom', fields: 'Contact__c, ConfirmedAt__c, Missed__c', purpose: 'Daily dose tracking → adherence stream in DC' },
+    { name: 'DLQI Assessment __c', system: 'Health Cloud', sysClass: 'hc', type: 'Custom', fields: 'Contact__c, Score__c (0–30), AssessmentDate__c', purpose: 'Dermatology Life Quality Index — every 4–6 weeks' },
+    { name: 'Milestone __c', system: 'Health Cloud', sysClass: 'hc', type: 'Custom', fields: 'Contact__c, MilestoneType__c, EarnedDate__c', purpose: 'Achievement badges: 21-day streak, PASI 75, etc.' },
+    { name: 'Refill Request __c', system: 'Health Cloud', sysClass: 'hc', type: 'Custom', fields: 'Contact__c, DaysRemaining__c, Status__c', purpose: 'Medication refill workflow — alerts at <14 days' },
+    { name: 'Navigator Alert __c', system: 'Health Cloud', sysClass: 'hc', type: 'Custom', fields: 'Contact__c, AlertType__c, Severity__c, AgentSuggestion__c', purpose: 'Navigator command centre queue — created by DC At-Risk segment' },
+    { name: 'Unified Individual', system: 'Data Cloud', sysClass: 'dc', type: 'DMO Standard', fields: 'UnifiedRecordId, ContactPointEmail, SourceObjectId', purpose: 'Identity-resolved patient across all sources' },
+    { name: 'NRS Score Stream DMO', system: 'Data Cloud', sysClass: 'dc', type: 'DMO Custom', fields: 'IndividualId, Score, SubmittedAt, WeekOnTherapy', purpose: 'Ingested via HC streaming connector' },
+    { name: 'Assessment Stream DMO', system: 'Data Cloud', sysClass: 'dc', type: 'DMO Custom', fields: 'IndividualId, Domain, DomainScore, AssessmentDate', purpose: 'From PsOdisk Domain Score __c' },
+    { name: 'Adherence Stream DMO', system: 'Data Cloud', sysClass: 'dc', type: 'DMO Custom', fields: 'IndividualId, ConfirmedAt, Missed, ConsecutiveMissed', purpose: 'From Dose Confirmation __c' },
+    { name: 'NRS Trend (CI)', system: 'Data Cloud', sysClass: 'dc', type: 'Calc. Insight', fields: 'IndividualId, AvgNRS_3d, AvgNRS_7d, TrendDirection', purpose: 'Rolling NRS averages → qualifies High NRS Segment' },
+    { name: 'Engagement Score (CI)', system: 'Data Cloud', sysClass: 'dc', type: 'Calc. Insight', fields: 'IndividualId, AdherenceRate, MissedDoses_7d, RiskScore', purpose: 'Multi-signal engagement → qualifies At-Risk Segment' },
+    { name: 'High NRS Segment', system: 'Data Cloud', sysClass: 'dc', type: 'Segment', fields: 'AvgNRS_3d ≥ 7', purpose: 'Triggers itch content personalisation via MC Next' },
+    { name: 'At-Risk Segment', system: 'Data Cloud', sysClass: 'dc', type: 'Segment', fields: 'MissedDoses_7d ≥ 2 OR NRS up OR Emotional < 3', purpose: 'Creates Navigator Alert + Agentforce outreach' },
+    { name: 'Content Item', system: 'MC Next', sysClass: 'mc', type: 'MC Object', fields: 'ContentId, Title, Category, TriggerConditions', purpose: '15 educational articles with P13n trigger metadata' },
+    { name: 'Personalisation Rule', system: 'MC Next', sysClass: 'mc', type: 'MC Object', fields: 'SegmentId, ContentIds[], Priority', purpose: 'Maps DC segments to ranked content items' },
+    { name: 'Content Recommendation', system: 'MC Next', sysClass: 'mc', type: 'API Response', fields: 'RankedContentIds[], PatientContext', purpose: 'Ranked JSON from P13n API after check-in' },
+    { name: 'Patient Support Agent', system: 'Agentforce', sysClass: 'af', type: 'Agent', fields: 'answer_faq, check_dose_history, escalate_to_nurse', purpose: '24/7 in-app chat with knowledge-grounded responses' },
+    { name: 'Navigator Agent', system: 'Agentforce', sysClass: 'af', type: 'Agent', fields: 'review_alert, approve_outreach, draft_message', purpose: 'Processes At-Risk queue for Navigator approval' },
+    { name: 'Proactive Outreach', system: 'Agentforce', sysClass: 'af', type: 'Agent Action', fields: 'PatientId, Channel, MessageTemplate, SentAt', purpose: 'Navigator-approved SMS/email/push outreach' },
+  ];
+
+  const badgeColors = { app: 'background:#e2e8f0;color:#0f172a', hc: 'background:#dbeafe;color:#1d4ed8', dc: 'background:#ede9fe;color:#6d28d9', mc: 'background:#d1fae5;color:#047857', af: 'background:#fef3c7;color:#b45309' };
+  const tableBody = document.getElementById('dm-ref-table-body');
+  if (tableBody) {
+    tableBody.innerHTML = allObjects.map(obj => `
+      <tr>
+        <td style="padding:8px 14px; border-bottom:1px solid #f1f5f9; font-weight:600; color:#0f172a;">${obj.name}</td>
+        <td style="padding:8px 14px; border-bottom:1px solid #f1f5f9;"><span style="display:inline-block; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:600; white-space:nowrap; ${badgeColors[obj.sysClass]}">${obj.system}</span></td>
+        <td style="padding:8px 14px; border-bottom:1px solid #f1f5f9;"><span style="display:inline-block; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:600; background:#f1f5f9; color:#475569;">${obj.type}</span></td>
+        <td style="padding:8px 14px; border-bottom:1px solid #f1f5f9; font-family:'SF Mono','Fira Code',monospace; font-size:11px; color:#475569;">${obj.fields}</td>
+        <td style="padding:8px 14px; border-bottom:1px solid #f1f5f9; color:#334155; line-height:1.5;">${obj.purpose}</td>
+      </tr>
+    `).join('');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// LAZY-LOAD DIAGRAMS — Override showTab for both enrichment + datamodel
+// ═══════════════════════════════════════════════════════════════════
 const origShowTab = showTab;
 showTab = function(tabName) {
   origShowTab(tabName);
   if (tabName === 'enrichment') {
     setTimeout(initEnrichmentDiagram, 100);
+  } else if (tabName === 'datamodel') {
+    setTimeout(initDataModelDiagram, 100);
   }
 };
 </script>

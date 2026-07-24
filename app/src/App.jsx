@@ -96,40 +96,25 @@ function DemoNote() {
         Identity stitches from anonymous → known in real time.
         Events are logged to the browser console.
       </span>
-      <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-        <a
-          href="/architecture.html"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: '6px',
-            padding: '6px 14px', borderRadius: '8px',
-            background: 'linear-gradient(135deg, #00A1E0, #6366F1)',
-            color: '#fff', fontSize: '12px', fontWeight: 600,
-            textDecoration: 'none', transition: 'opacity 0.2s',
-          }}
-          onMouseOver={e => e.currentTarget.style.opacity = '0.85'}
-          onMouseOut={e => e.currentTarget.style.opacity = '1'}
-        >
-          🔬 Architecture Guide
-        </a>
-        <a
-          href="/datamodel.html"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: '6px',
-            padding: '6px 14px', borderRadius: '8px',
-            background: 'linear-gradient(135deg, #FF9900, #F59E0B)',
-            color: '#fff', fontSize: '12px', fontWeight: 600,
-            textDecoration: 'none', transition: 'opacity 0.2s',
-          }}
-          onMouseOver={e => e.currentTarget.style.opacity = '0.85'}
-          onMouseOut={e => e.currentTarget.style.opacity = '1'}
-        >
-          📊 Data Model
-        </a>
-      </div>
+    </div>
+  )
+}
+
+function SideNav() {
+  return (
+    <div className="side-nav">
+      <a href="/architecture.html" className="side-nav-btn" target="_blank" rel="noopener noreferrer">
+        <span className="side-nav-icon">🏗️</span>
+        <span className="side-nav-label">ARCHITECTURE</span>
+      </a>
+      <a href="/architecture.html#enrichment" className="side-nav-btn" target="_blank" rel="noopener noreferrer">
+        <span className="side-nav-icon">🔬</span>
+        <span className="side-nav-label">ENRICHMENT</span>
+      </a>
+      <a href="/architecture.html#datamodel" className="side-nav-btn" target="_blank" rel="noopener noreferrer">
+        <span className="side-nav-icon">📊</span>
+        <span className="side-nav-label">DATA MODEL</span>
+      </a>
     </div>
   )
 }
@@ -144,6 +129,7 @@ export default function App() {
       <PhoneApp isStandalone={isStandalone} />
       {!isStandalone && <DemoPersonas />}
       {!isStandalone && <DemoNote />}
+      {!isStandalone && <SideNav />}
     </AppProvider>
   )
 }
