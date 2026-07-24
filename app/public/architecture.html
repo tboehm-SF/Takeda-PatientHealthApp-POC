@@ -50,6 +50,22 @@
   }
   .diagram-container{position:absolute;inset:0;display:none}
   .diagram-container.active{display:block}
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    header{padding:10px 16px}
+    header img{height:24px}
+    .tabs{padding:8px 12px 0;gap:2px}
+    .tab-btn{font-size:12px;padding:8px 14px}
+    .canvas-wrap{margin:0 12px 12px;border-radius:0 1rem 1rem 1rem}
+  }
+  @media (max-width: 480px) {
+    header{padding:8px 10px}
+    header img{height:20px}
+    .tabs{padding:6px 8px 0}
+    .tab-btn{font-size:11px;padding:6px 10px}
+    .canvas-wrap{margin:0 8px 8px;border-radius:0 .75rem .75rem .75rem}
+  }
   /* tooltip */
   #tooltip{
     position:fixed;z-index:9999;
@@ -206,8 +222,27 @@ function attachEvents(paper, attrKey){
   paper.on('element:mouseleave', function(){ hideTooltip(); });
 }
 
-/* ───── lazy state ───── */
+/* ───── lazy state + paper refs for resize ───── */
 var builtE = false, builtD = false;
+var paperE = null, paperD = null;
+
+function resizePaper(paper, container){
+  if(!paper || !container) return;
+  var w = container.clientWidth;
+  var h = container.clientHeight;
+  if(w < 1 || h < 1) return;
+  paper.setDimensions(w, h);
+  paper.scaleContentToFit({ padding: 20, maxScale: 1.4 });
+}
+
+var resizeTimer;
+window.addEventListener('resize', function(){
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(function(){
+    if(paperE) resizePaper(paperE, document.getElementById('enrichment'));
+    if(paperD) resizePaper(paperD, document.getElementById('datamodel'));
+  }, 100);
+});
 
 /* ===================================================================
    ARCHITECTURE ENRICHMENT DIAGRAM
@@ -215,13 +250,16 @@ var builtE = false, builtD = false;
 function buildEnrichment(){
   if(builtE) return; builtE = true;
   var container = document.getElementById('enrichment');
+  var cw = container.clientWidth || W_ENRICH;
+  var ch = container.clientHeight || H_ENRICH;
   var graph = new joint.dia.Graph();
   var paper = new joint.dia.Paper({
     el: container, model: graph,
-    width: W_ENRICH, height: H_ENRICH,
+    width: cw, height: ch,
     gridSize: 1, interactive: false,
     background: { color: '#ffffff' }
   });
+  paperE = paper;
 
   // zones
   graph.addCells([
@@ -345,13 +383,16 @@ function buildEnrichment(){
 function buildDatamodel(){
   if(builtD) return; builtD = true;
   var container = document.getElementById('datamodel');
+  var cw = container.clientWidth || W_DM;
+  var ch = container.clientHeight || H_DM;
   var graph = new joint.dia.Graph();
   var paper = new joint.dia.Paper({
     el: container, model: graph,
-    width: W_DM, height: H_DM,
+    width: cw, height: ch,
     gridSize: 1, interactive: false,
     background: { color: '#ffffff' }
   });
+  paperD = paper;
 
   // zones
   graph.addCells([
@@ -495,8 +536,13 @@ function showTab(tab){
   for(var j = 0; j < panels.length; j++){
     panels[j].classList.toggle('active', panels[j].id === tab);
   }
-  if(tab === 'enrichment') buildEnrichment();
-  else buildDatamodel();
+  if(tab === 'enrichment'){
+    buildEnrichment();
+    if(paperE) resizePaper(paperE, document.getElementById('enrichment'));
+  } else {
+    buildDatamodel();
+    if(paperD) resizePaper(paperD, document.getElementById('datamodel'));
+  }
   history.replaceState(null, null, '#' + tab);
 }
 
