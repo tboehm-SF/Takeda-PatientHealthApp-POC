@@ -50,9 +50,13 @@
   }
   .diagram-container{position:absolute;inset:0;display:none}
   .diagram-container.active{display:block}
-  /* enrichment: static Excalidraw SVG, centered & fit-to-panel (vector, zoomable) */
-  #enrichment.active{display:flex;align-items:center;justify-content:center;padding:16px}
-  #enrichment img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
+  /* All three tabs: static Excalidraw SVG, centered & fit-to-panel (vector, zoomable) */
+  #enrichment.active, #process.active, #datamodel.active{
+    display:flex;align-items:center;justify-content:center;padding:16px
+  }
+  #enrichment img, #process img, #datamodel img{
+    max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain
+  }
 
   /* ── Responsive ── */
   @media (max-width: 768px) {
@@ -96,6 +100,7 @@
 
 <div class="tabs">
   <button class="tab-btn active" data-tab="enrichment">Architecture Enrichment</button>
+  <button class="tab-btn" data-tab="process">Data Flow Process</button>
   <button class="tab-btn" data-tab="datamodel">Data Model</button>
 </div>
 
@@ -103,309 +108,18 @@
   <div id="enrichment" class="diagram-container active">
     <img src="enrichment.svg" alt="Takeda Patient Health App — Hybrid Reference Architecture: AWS medallion lakehouse × Salesforce Data Cloud / Health Cloud / Agentforce × Aprimo DAM, with an 8-step data flow from ingestion to feedback loop.">
   </div>
-  <div id="datamodel" class="diagram-container"></div>
+  <div id="process" class="diagram-container">
+    <img src="process.svg" alt="End-to-End Patient Data Journey: 8-step process from mobile app ingestion through AWS data engineering, Salesforce intelligence & engagement, content delivery, and feedback loop.">
+  </div>
+  <div id="datamodel" class="diagram-container">
+    <img src="datamodel.svg" alt="Takeda Patient Health App — Data Model: 5 system zones (Mobile App, Health Cloud, Data Cloud, MC Next/P13n, Agentforce) with entity relationships.">
+  </div>
 </div>
 
-<div id="tooltip"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@joint/core@4.0.4/dist/joint.js"></script>
 <script>
 (function(){
-
-/* ───── helpers ───── */
-var W_DM = 1760, H_DM = 820;
-
-function luminance(hex){
-  var c = hex.replace('#','');
-  var r = parseInt(c.substr(0,2),16), g = parseInt(c.substr(2,2),16), b = parseInt(c.substr(4,2),16);
-  return r*0.299 + g*0.587 + b*0.114;
-}
-
-function makeRect(id, x, y, w, h, label, bg, tooltipAttr, tooltipData){
-  var txtColor = luminance(bg) > 160 ? '#1a1a1a' : '#ffffff';
-  var el = new joint.shapes.standard.Rectangle({
-    id: id,
-    position: { x: x, y: y },
-    size: { width: w, height: h },
-    attrs: {
-      body: {
-        fill: bg, stroke: 'none', rx: 8, ry: 8,
-        filter: { name: 'dropShadow', args: { dx: 0, dy: 1, blur: 3, color: 'rgba(0,0,0,0.12)' } }
-      },
-      label: {
-        text: label, fill: txtColor, fontSize: 11, fontWeight: 500,
-        fontFamily: "'Helvetica Neue',Helvetica,Arial,sans-serif",
-        textWrap: { width: w - 16 }
-      }
-    }
-  });
-  if(tooltipData) el.set(tooltipAttr, tooltipData);
-  return el;
-}
-
-function makeZone(x, y, w, h, label, color){
-  var el = new joint.shapes.standard.Rectangle({
-    position: { x: x, y: y },
-    size: { width: w, height: h },
-    attrs: {
-      body: {
-        fill: 'transparent', stroke: color, strokeWidth: 2,
-        strokeDasharray: '6 3', rx: 16, ry: 16
-      },
-      label: {
-        text: label, fill: color, fontSize: 13, fontWeight: 600,
-        refX: 16, refY: 12, textAnchor: 'start', textVerticalAnchor: 'top',
-        fontFamily: "'Helvetica Neue',Helvetica,Arial,sans-serif"
-      }
-    }
-  });
-  el.set('z', 0);
-  return el;
-}
-
-function makeLink(srcId, tgtId, label, dashed, vertices, color){
-  var cfg = {
-    source: { id: srcId },
-    target: { id: tgtId },
-    attrs: {
-      line: {
-        stroke: color || '#94a3b8', strokeWidth: 1.5,
-        targetMarker: { type: 'path', d: 'M 8 -4 0 0 8 4 Z', fill: color || '#94a3b8' }
-      }
-    }
-  };
-  if(label){
-    cfg.labels = [{
-      attrs: {
-        text: { text: label, fontSize: 9, fontFamily: "'Helvetica Neue',Helvetica,Arial,sans-serif", fill: '#64748b' },
-        rect: { fill: '#fff', rx: 4, ry: 4 }
-      }
-    }];
-  }
-  var l = new joint.shapes.standard.Link(cfg);
-  if(dashed) l.attr('line/strokeDasharray', '6 4');
-  if(vertices && vertices.length) l.set('vertices', vertices);
-  return l;
-}
-
-/* ───── tooltip ───── */
-var tip = document.getElementById('tooltip');
-
-function showTooltip(data, cx, cy){
-  if(!data) return;
-  var html = '';
-  if(data.icon) html += '<div class="tt-icon">' + data.icon + '</div>';
-  html += '<div class="tt-title">' + (data.title || '') + '</div>';
-  html += '<div class="tt-sub">' + (data.subtitle || data.system || '') + '</div>';
-  if(data.gap) html += '<div class="tt-section"><div class="tt-label">Gap</div><div class="tt-text">' + data.gap + '</div></div>';
-  if(data.fields) html += '<div class="tt-section"><div class="tt-label">Fields</div><div class="tt-text">' + data.fields + '</div></div>';
-  if(data.capability) html += '<div class="tt-section"><div class="tt-label">Capability</div><div class="tt-text">' + data.capability + '</div></div>';
-  if(data.purpose) html += '<div class="tt-section"><div class="tt-label">Purpose</div><div class="tt-text">' + data.purpose + '</div></div>';
-  tip.innerHTML = html;
-  tip.classList.add('show');
-  var r = tip.getBoundingClientRect();
-  var tx = cx + 16, ty = cy - r.height / 2;
-  if(tx + r.width > window.innerWidth - 8) tx = cx - r.width - 16;
-  if(ty < 8) ty = 8;
-  if(ty + r.height > window.innerHeight - 8) ty = window.innerHeight - r.height - 8;
-  tip.style.left = tx + 'px';
-  tip.style.top = ty + 'px';
-}
-
-function hideTooltip(){ tip.classList.remove('show'); }
-
-function attachEvents(paper, attrKey){
-  paper.on('element:mouseenter', function(view, evt){
-    var d = view.model.get(attrKey);
-    if(d){ view.el.style.cursor = 'pointer'; showTooltip(d, evt.clientX, evt.clientY); }
-  });
-  paper.on('element:mousemove', function(view, evt){
-    var d = view.model.get(attrKey);
-    if(d) showTooltip(d, evt.clientX, evt.clientY);
-  });
-  paper.on('element:mouseleave', function(){ hideTooltip(); });
-}
-
-/* ───── lazy state + paper refs for resize ───── */
-var builtE = false, builtD = false;
-var paperE = null, paperD = null;
-
-function resizePaper(paper, container){
-  if(!paper || !container) return;
-  var w = container.clientWidth;
-  var h = container.clientHeight;
-  if(w < 1 || h < 1) return;
-  paper.setDimensions(w, h);
-  paper.scaleContentToFit({ padding: 20, maxScale: 1.4 });
-}
-
-var resizeTimer;
-window.addEventListener('resize', function(){
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(function(){
-    if(paperE) resizePaper(paperE, document.getElementById('enrichment'));
-    if(paperD) resizePaper(paperD, document.getElementById('datamodel'));
-  }, 100);
-});
-
-/* ===================================================================
-   ARCHITECTURE ENRICHMENT DIAGRAM
-   Now a static, vector Excalidraw export (enrichment.svg) with real AWS
-   service icons + the Salesforce logo, embedded as an <img> in the markup
-   above. buildEnrichment() is retained as a no-op so the tab-switch and
-   resize logic below need no special-casing.
-   =================================================================== */
-function buildEnrichment(){ builtE = true; }
-
-/* ===================================================================
-   DATA MODEL DIAGRAM
-   =================================================================== */
-function buildDatamodel(){
-  if(builtD) return; builtD = true;
-  var container = document.getElementById('datamodel');
-  var cw = container.clientWidth || W_DM;
-  var ch = container.clientHeight || H_DM;
-  var graph = new joint.dia.Graph();
-  var paper = new joint.dia.Paper({
-    el: container, model: graph,
-    width: cw, height: ch,
-    gridSize: 1, interactive: false,
-    background: { color: '#ffffff' }
-  });
-  paperD = paper;
-
-  // zones
-  graph.addCells([
-    makeZone(20,  20, 210, 780, 'Mobile App', '#1F2937'),
-    makeZone(250, 20, 460, 780, 'Health Cloud', '#2563EB'),
-    makeZone(730, 20, 480, 780, 'Data Cloud', '#7C3AED'),
-    makeZone(1230, 20, 260, 380, 'MC Next (P13n)', '#059669'),
-    makeZone(1230, 420, 260, 380, 'Agentforce', '#D97706')
-  ]);
-
-  /* ── Mobile App nodes ── */
-  var appNRS  = makeRect('d_appNRS',  40, 75,  170, 36, 'NRS Check-in', '#374151', 'dmMeta',
-    { icon:'\u{1F4CA}', title:'NRS Check-in', system:'Mobile App', fields:'0\u201310 slider', purpose:'Patient reports pain score daily' });
-  var appPso  = makeRect('d_appPso',  40, 130, 170, 36, 'PsOdisk Assessment', '#374151', 'dmMeta',
-    { icon:'\u{1F4CB}', title:'PsOdisk Assessment', system:'Mobile App', fields:'10 domains', purpose:'Comprehensive QoL assessment' });
-  var appDose = makeRect('d_appDose', 40, 185, 170, 36, 'Dose Confirmation', '#374151', 'dmMeta',
-    { icon:'\u{1F48A}', title:'Dose Confirmation', system:'Mobile App', fields:'Daily tap', purpose:'Patient confirms medication taken' });
-  var appChat = makeRect('d_appChat', 40, 240, 170, 36, 'Agentforce Chat', '#374151', 'dmMeta',
-    { icon:'\u{1F4AC}', title:'Agentforce Chat', system:'Mobile App', fields:'In-app AI', purpose:'Conversational AI within mobile app' });
-  var appEdu  = makeRect('d_appEdu',  40, 295, 170, 36, 'Education Hub', '#374151', 'dmMeta',
-    { icon:'\u{1F4DA}', title:'Education Hub', system:'Mobile App', fields:'Personalized content', purpose:'AI-curated educational materials' });
-  graph.addCells([appNRS, appPso, appDose, appChat, appEdu]);
-
-  /* ── Health Cloud nodes ── */
-  var hcContact   = makeRect('d_hcContact',   275, 62,  210, 44, 'Contact (Patient Identity)', '#3B82F6', 'dmMeta',
-    { icon:'\u{1F464}', title:'Contact', system:'Health Cloud', fields:'Patient Identity \u2014 anchor', purpose:'Person Account unifying patient identity' });
-  var hcEnroll    = makeRect('d_hcEnroll',    275, 122, 190, 36, 'CareProgram Enrollment', '#3B82F6', 'dmMeta',
-    { icon:'\u{1F4DD}', title:'CareProgram Enrollment', system:'Health Cloud', fields:'Program, Status, Dates', purpose:'Tracks patient program participation' });
-  var hcTreat     = makeRect('d_hcTreat',     275, 174, 170, 36, 'Treatment Record', '#3B82F6', 'dmMeta',
-    { icon:'\u{1F489}', title:'Treatment Record', system:'Health Cloud', fields:'Medication, Dosage, Frequency', purpose:'Clinical treatment details' });
-  var hcNRS       = makeRect('d_hcNRS',       275, 226, 150, 36, 'NRS Score', '#3B82F6', 'dmMeta',
-    { icon:'\u{1F4CA}', title:'NRS Score', system:'Health Cloud', fields:'Score, Date, Trend', purpose:'Stored pain scores from check-ins' });
-  var hcPso       = makeRect('d_hcPso',       275, 278, 190, 36, 'PsOdisk Assessment', '#3B82F6', 'dmMeta',
-    { icon:'\u{1F4CB}', title:'PsOdisk Assessment', system:'Health Cloud', fields:'Assessment + Domain Scores', purpose:'QoL assessment with child domain records' });
-  var hcDomain    = makeRect('d_hcDomain',    310, 324, 150, 30, '\u21B3 Domain Score', '#60A5FA', 'dmMeta',
-    { icon:'\u{1F4CA}', title:'Domain Score', system:'Health Cloud', fields:'Domain, Score, Date', purpose:'Child object of PsOdisk Assessment' });
-  var hcDose      = makeRect('d_hcDose',      275, 370, 170, 36, 'Dose Confirmation', '#3B82F6', 'dmMeta',
-    { icon:'\u{1F48A}', title:'Dose Confirmation', system:'Health Cloud', fields:'Date, Confirmed, Medication', purpose:'Adherence tracking records' });
-  var hcDLQI      = makeRect('d_hcDLQI',      275, 422, 170, 36, 'DLQI Assessment', '#3B82F6', 'dmMeta',
-    { icon:'\u{1F4CB}', title:'DLQI Assessment', system:'Health Cloud', fields:'Score, Date, Severity', purpose:'Dermatology Life Quality Index' });
-  var hcMilestone = makeRect('d_hcMilestone', 275, 474, 150, 36, 'Milestone', '#3B82F6', 'dmMeta',
-    { icon:'\u{1F3C6}', title:'Milestone', system:'Health Cloud', fields:'Type, Date, Status', purpose:'Patient journey milestones' });
-  var hcRefill    = makeRect('d_hcRefill',    480, 370, 150, 36, 'Refill Request', '#3B82F6', 'dmMeta',
-    { icon:'\u{1F504}', title:'Refill Request', system:'Health Cloud', fields:'Medication, Status, Date', purpose:'Prescription refill tracking' });
-  var hcAlert     = makeRect('d_hcAlert',     275, 535, 410, 44, 'Navigator Alert', '#3B82F6', 'dmMeta',
-    { icon:'\u{1F514}', title:'Navigator Alert', system:'Health Cloud', fields:'Type, Severity, Status, Assigned Navigator', purpose:'Alerts routed to care navigators' });
-  graph.addCells([hcContact, hcEnroll, hcTreat, hcNRS, hcPso, hcDomain, hcDose, hcDLQI, hcMilestone, hcRefill, hcAlert]);
-
-  /* ── Data Cloud nodes ── */
-  var dcUnified   = makeRect('d_dcUnified',   750, 62,  430, 48, 'Unified Individual', '#8B5CF6', 'dmMeta',
-    { icon:'\u{1F310}', title:'Unified Individual', system:'Data Cloud', fields:'Identity Resolution \u2014 wide anchor', purpose:'Stitched patient profile across all sources' });
-  var dcNRSStream = makeRect('d_dcNRSStream', 750, 140, 135, 36, 'NRS Score Stream', '#8B5CF6', 'dmMeta',
-    { icon:'\u{1F4CA}', title:'NRS Score Stream DMO', system:'Data Cloud', fields:'Score, Timestamp', purpose:'Streaming NRS data from Health Cloud' });
-  var dcAssStream = makeRect('d_dcAssStream', 905, 140, 150, 36, 'Assessment Stream', '#8B5CF6', 'dmMeta',
-    { icon:'\u{1F4CB}', title:'Assessment Stream DMO', system:'Data Cloud', fields:'Type, Score, Date', purpose:'Streaming assessment data' });
-  var dcAdhStream = makeRect('d_dcAdhStream', 1075, 140, 125, 36, 'Adherence Stream', '#8B5CF6', 'dmMeta',
-    { icon:'\u{1F48A}', title:'Adherence Stream DMO', system:'Data Cloud', fields:'Dose, Date, Status', purpose:'Streaming adherence data' });
-  var dcNRSTrend  = makeRect('d_dcNRSTrend',  750, 210, 165, 36, 'NRS Trend (CI)', '#A78BFA', 'dmMeta',
-    { icon:'\u{1F4C8}', title:'NRS Trend', system:'Data Cloud \u2014 Calculated Insight', fields:'Trend, 7-day MA, Direction', purpose:'Calculated insight for NRS trending' });
-  var dcEngScore  = makeRect('d_dcEngScore',  940, 210, 175, 36, 'Engagement Score (CI)', '#A78BFA', 'dmMeta',
-    { icon:'\u{1F4C8}', title:'Engagement Score', system:'Data Cloud \u2014 Calculated Insight', fields:'Score, Percentile, Risk', purpose:'Calculated insight for engagement scoring' });
-  var dcHighNRS   = makeRect('d_dcHighNRS',   750, 280, 165, 36, 'High NRS Segment', '#7C3AED', 'dmMeta',
-    { icon:'\u{1F3AF}', title:'High NRS Segment', system:'Data Cloud', fields:'NRS \u2265 7, Active', purpose:'Segment for high pain patients' });
-  var dcAtRisk    = makeRect('d_dcAtRisk',    940, 280, 165, 36, 'At-Risk Segment', '#7C3AED', 'dmMeta',
-    { icon:'\u{1F3AF}', title:'At-Risk Segment', system:'Data Cloud', fields:'Adherence < 80%, Engagement Low', purpose:'Segment for at-risk patients' });
-  graph.addCells([dcUnified, dcNRSStream, dcAssStream, dcAdhStream, dcNRSTrend, dcEngScore, dcHighNRS, dcAtRisk]);
-
-  /* ── MC Next nodes ── */
-  var mcContent = makeRect('d_mcContent', 1250, 75,  220, 36, 'Content Item', '#10B981', 'dmMeta',
-    { icon:'\u{1F4C4}', title:'Content Item', system:'MC Next', fields:'Title, Type, Tags', purpose:'Personalized content assets' });
-  var mcRule    = makeRect('d_mcRule',    1250, 130, 220, 36, 'P13n Rule', '#10B981', 'dmMeta',
-    { icon:'\u2699\uFE0F', title:'P13n Rule', system:'MC Next', fields:'Condition, Weight, Priority', purpose:'Personalization rule engine' });
-  var mcReco    = makeRect('d_mcReco',    1250, 185, 220, 36, 'Recommendation', '#10B981', 'dmMeta',
-    { icon:'\u{1F4A1}', title:'Recommendation', system:'MC Next', fields:'Content, Score, Rank', purpose:'Ranked content recommendations' });
-  graph.addCells([mcContent, mcRule, mcReco]);
-
-  /* ── Agentforce nodes ── */
-  var afPatient  = makeRect('d_afPatient',  1250, 475, 220, 36, 'Patient Support Agent', '#F59E0B', 'dmMeta',
-    { icon:'\u{1F916}', title:'Patient Support Agent', system:'Agentforce', fields:'Knowledge, Guardrails', purpose:'AI agent for patient self-service' });
-  var afNav      = makeRect('d_afNav',      1250, 530, 220, 36, 'Navigator Agent', '#F59E0B', 'dmMeta',
-    { icon:'\u{1F9D1}\u200D\u2695\uFE0F', title:'Navigator Agent', system:'Agentforce', fields:'Escalation, Clinical Context', purpose:'AI agent for care navigator support' });
-  var afOutreach = makeRect('d_afOutreach', 1250, 585, 220, 36, 'Proactive Outreach', '#F59E0B', 'dmMeta',
-    { icon:'\u{1F4E2}', title:'Proactive Outreach', system:'Agentforce', fields:'Trigger, Channel, Template', purpose:'Automated proactive patient outreach' });
-  graph.addCells([afPatient, afNav, afOutreach]);
-
-  /* ── Links ── */
-  graph.addCells([
-    // App → HC (REST API)
-    makeLink('d_appNRS',  'd_hcNRS',  'REST API', false, [{x:237, y:93}, {x:237, y:244}], '#3B82F6'),
-    makeLink('d_appPso',  'd_hcPso',  null,       false, [{x:242, y:148},{x:242, y:296}], '#3B82F6'),
-    makeLink('d_appDose', 'd_hcDose', null,       false, [{x:247, y:203},{x:247, y:388}], '#3B82F6'),
-
-    // HC → DC (Identity Resolution, Streaming)
-    makeLink('d_hcContact', 'd_dcUnified',  'Identity Resolution', false, [{x:715, y:84}, {x:715, y:86}], '#7C3AED'),
-    makeLink('d_hcNRS',     'd_dcNRSStream','Streaming',           false, null, '#7C3AED'),
-    makeLink('d_hcPso',     'd_dcAssStream',null,                  false, [{x:720, y:296},{x:720, y:158}], '#7C3AED'),
-    makeLink('d_hcDose',    'd_dcAdhStream',null,                  false, [{x:725, y:388},{x:725, y:158}], '#7C3AED'),
-
-    // DC internal (CI → Segments)
-    makeLink('d_dcNRSStream', 'd_dcNRSTrend', null, false, null, '#A78BFA'),
-    makeLink('d_dcAssStream', 'd_dcEngScore', null, false, null, '#A78BFA'),
-    makeLink('d_dcNRSTrend',  'd_dcHighNRS',  null, false, null, '#A78BFA'),
-    makeLink('d_dcEngScore',  'd_dcAtRisk',   null, false, null, '#A78BFA'),
-
-    // DC → MC (Triggers P13n)
-    makeLink('d_dcHighNRS', 'd_mcRule', 'Triggers P13n', false, [{x:1220, y:298},{x:1220, y:148}], '#059669'),
-    makeLink('d_dcAtRisk',  'd_mcRule', null,             false, [{x:1225, y:298},{x:1225, y:152}], '#059669'),
-
-    // DC → HC (Creates Alert)
-    makeLink('d_dcAtRisk', 'd_hcAlert', 'Creates Alert', false, [{x:1022, y:320},{x:1022, y:557},{x:695, y:557}], '#3B82F6'),
-
-    // MC → App (Ranked Content)
-    makeLink('d_mcReco', 'd_appEdu', 'Ranked Content', false,
-      [{x:1510, y:203},{x:1510, y:770},{x:125, y:770},{x:125, y:318}], '#10B981'),
-
-    // HC → AF (Navigator Queue)
-    makeLink('d_hcAlert', 'd_afNav', 'Navigator Queue', false,
-      [{x:695, y:580},{x:1220, y:580},{x:1220, y:548}], '#D97706'),
-
-    // AF → App (SMS/Push/Email)
-    makeLink('d_afPatient', 'd_appChat', 'SMS/Push/Email', false,
-      [{x:1510, y:493},{x:1510, y:750},{x:125, y:750},{x:125, y:263}], '#D97706'),
-
-    // App → AF (Agentforce API)
-    makeLink('d_appChat', 'd_afPatient', 'Agentforce API', false,
-      [{x:215, y:258},{x:215, y:760},{x:1520, y:760},{x:1520, y:498}], '#D97706')
-  ]);
-
-  paper.scaleContentToFit({ padding: 24, maxScale: 1.3 });
-  attachEvents(paper, 'dmMeta');
-}
-
-/* ───── Tab switching ───── */
+/* ───── Tab switching (3 static Excalidraw SVG tabs) ───── */
 var tabBtns = document.querySelectorAll('.tab-btn');
 
 function showTab(tab){
@@ -415,13 +129,6 @@ function showTab(tab){
   var panels = document.querySelectorAll('.diagram-container');
   for(var j = 0; j < panels.length; j++){
     panels[j].classList.toggle('active', panels[j].id === tab);
-  }
-  if(tab === 'enrichment'){
-    buildEnrichment();
-    if(paperE) resizePaper(paperE, document.getElementById('enrichment'));
-  } else {
-    buildDatamodel();
-    if(paperD) resizePaper(paperD, document.getElementById('datamodel'));
   }
   history.replaceState(null, null, '#' + tab);
 }
@@ -434,7 +141,9 @@ for(var i = 0; i < tabBtns.length; i++){
 
 function fromHash(){
   var h = location.hash.replace('#','');
-  return h === 'datamodel' ? 'datamodel' : 'enrichment';
+  if(h === 'process') return 'process';
+  if(h === 'datamodel') return 'datamodel';
+  return 'enrichment';
 }
 
 window.addEventListener('hashchange', function(){ showTab(fromHash()); });
