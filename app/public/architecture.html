@@ -50,6 +50,9 @@
   }
   .diagram-container{position:absolute;inset:0;display:none}
   .diagram-container.active{display:block}
+  /* enrichment: static Excalidraw SVG, centered & fit-to-panel (vector, zoomable) */
+  #enrichment.active{display:flex;align-items:center;justify-content:center;padding:16px}
+  #enrichment img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
 
   /* ── Responsive ── */
   @media (max-width: 768px) {
@@ -97,7 +100,9 @@
 </div>
 
 <div class="canvas-wrap">
-  <div id="enrichment" class="diagram-container active"></div>
+  <div id="enrichment" class="diagram-container active">
+    <img src="enrichment.svg" alt="Takeda Patient Health App — Hybrid Reference Architecture: AWS medallion lakehouse × Salesforce Data Cloud / Health Cloud / Agentforce × Aprimo DAM, with an 8-step data flow from ingestion to feedback loop.">
+  </div>
   <div id="datamodel" class="diagram-container"></div>
 </div>
 
@@ -108,7 +113,6 @@
 (function(){
 
 /* ───── helpers ───── */
-var W_ENRICH = 1760, H_ENRICH = 750;
 var W_DM = 1760, H_DM = 820;
 
 function luminance(hex){
@@ -246,136 +250,12 @@ window.addEventListener('resize', function(){
 
 /* ===================================================================
    ARCHITECTURE ENRICHMENT DIAGRAM
+   Now a static, vector Excalidraw export (enrichment.svg) with real AWS
+   service icons + the Salesforce logo, embedded as an <img> in the markup
+   above. buildEnrichment() is retained as a no-op so the tab-switch and
+   resize logic below need no special-casing.
    =================================================================== */
-function buildEnrichment(){
-  if(builtE) return; builtE = true;
-  var container = document.getElementById('enrichment');
-  var cw = container.clientWidth || W_ENRICH;
-  var ch = container.clientHeight || H_ENRICH;
-  var graph = new joint.dia.Graph();
-  var paper = new joint.dia.Paper({
-    el: container, model: graph,
-    width: cw, height: ch,
-    gridSize: 1, interactive: false,
-    background: { color: '#ffffff' }
-  });
-  paperE = paper;
-
-  // zones
-  graph.addCells([
-    makeZone(20, 20, 790, 710, 'AWS  Data Platform', '#FF9900'),
-    makeZone(870, 20, 870, 710, 'Salesforce  Engagement Layer', '#00A1E0')
-  ]);
-
-  // ── AWS nodes ──
-  var patientApp = makeRect('e_patientApp', 40, 65, 140, 42, 'Patient App', '#22C55E', 'enrichmentData', null);
-  var apiGw      = makeRect('e_apiGw',      40, 135, 120, 38, 'API Gateway', '#FF9900', 'enrichmentData', null);
-  var lambda     = makeRect('e_lambda',    185, 135, 100, 38, 'Lambda', '#FF9900', 'enrichmentData', null);
-  var dynamoDB   = makeRect('e_dynamoDB',  315, 135, 140, 38, 'DynamoDB (PII)', '#EF4444', 'enrichmentData', null);
-  var kinesis    = makeRect('e_kinesis',   185, 200, 120, 38, 'Kinesis Streams', '#FF9900', 'enrichmentData', null);
-  var glueETL    = makeRect('e_glueETL',   330, 200, 100, 38, 'Glue ETL', '#FF9900', 'enrichmentData', null);
-  var bronze     = makeRect('e_bronze',     50, 285, 100, 36, 'Bronze', '#D97706', 'enrichmentData', null);
-  var silver     = makeRect('e_silver',    175, 285, 100, 36, 'Silver', '#D97706', 'enrichmentData', null);
-  var iceberg    = makeRect('e_iceberg',   305, 285, 140, 36, 'Iceberg (Gold)', '#D97706', 'enrichmentData', null);
-  var lakeForm   = makeRect('e_lakeForm',   50, 360, 130, 36, 'Lake Formation', '#FF9900', 'enrichmentData', null);
-  var databricks = makeRect('e_databricks',200, 360, 120, 36, 'Databricks', '#FF3621', 'enrichmentData', null);
-  var athena     = makeRect('e_athena',    345, 360, 100, 36, 'Athena', '#FF9900', 'enrichmentData', null);
-  var dlq        = makeRect('e_dlq',       520, 200, 120, 38, 'DLQ Central', '#9CA3AF', 'enrichmentData', null);
-
-  graph.addCells([patientApp, apiGw, lambda, dynamoDB, kinesis, glueETL, bronze, silver, iceberg, lakeForm, databricks, athena, dlq]);
-
-  // ── Salesforce nodes ──
-  var iceConn = makeRect('e_iceConn', 890, 100, 165, 46, 'S3 / Iceberg Connector', '#0D9DDA', 'enrichmentData', {
-    icon: '\u{1F517}', title: 'S3/Iceberg Connector', subtitle: 'Zero-Copy Federation',
-    gap: 'No bridge between the AWS data lakehouse and the patient engagement layer.',
-    capability: 'Zero-copy federation reads pseudonymized data directly from S3/Iceberg tables \u2014 no data duplication, no ETL latency.'
-  });
-  var dbConn = makeRect('e_dbConn', 890, 220, 165, 46, 'Databricks Connector', '#0D9DDA', 'enrichmentData', {
-    icon: '\u{1F517}', title: 'Databricks Connector', subtitle: 'Zero-Copy from Databricks',
-    gap: 'ML-enriched data stuck in Databricks with no path to engagement layer.',
-    capability: 'Zero-copy federation from Databricks Unity Catalog \u2014 alternative/parallel path to Data Cloud.'
-  });
-
-  // "Either/Or" label element
-  var eitherOr = new joint.shapes.standard.Rectangle({
-    id: 'e_eitherOr', position: { x: 905, y: 170 }, size: { width: 60, height: 22 },
-    attrs: {
-      body: { fill: 'transparent', stroke: 'none' },
-      label: { text: 'Either / Or', fill: '#94a3b8', fontSize: 10, fontStyle: 'italic',
-               fontFamily: "'Helvetica Neue',Helvetica,Arial,sans-serif" }
-    }
-  });
-
-  var dataCloud = makeRect('e_dataCloud', 1100, 100, 170, 56, 'Data Cloud', '#0D9DDA', 'enrichmentData', {
-    icon: '\u2601\uFE0F', title: 'Data Cloud', subtitle: 'Unified Individual (Patient 360)',
-    gap: 'Data siloed across 35+ custom entities \u2014 no unified patient view.',
-    capability: 'Identity resolution stitches anonymous \u2192 known profiles. Calculated Insights score engagement & adherence risk in real time.'
-  });
-  var healthCloud = makeRect('e_healthCloud', 1100, 220, 170, 56, 'Health Cloud', '#9050E9', 'enrichmentData', {
-    icon: '\u{1F3E5}', title: 'Health Cloud', subtitle: 'Person Account + Clinical SoR',
-    gap: 'Custom-built clinical entities without OOTB pharma compliance.',
-    capability: 'OOTB clinical data model replaces ~60% of custom entities. Shield Platform Encryption + consent lifecycle.'
-  });
-  var p13n = makeRect('e_p13n', 1320, 100, 185, 46, 'Personalization on Core', '#FE9339', 'enrichmentData', {
-    icon: '\u{1F3AF}', title: 'Personalization on Core', subtitle: 'AI-Driven Content Recommendations',
-    gap: 'No real-time personalization \u2014 content served generically.',
-    capability: 'Data Graphs + Calculated Insights feed a hybrid recommender. Personalization Points API returns recommendations in <200ms.'
-  });
-  var agentforce = makeRect('e_agentforce', 1320, 220, 170, 46, 'Agentforce', '#6366F1', 'enrichmentData', {
-    icon: '\u{1F916}', title: 'Agentforce Service Agent', subtitle: 'Conversational AI Patient Assistant',
-    gap: 'No conversational AI and no HCP escalation path.',
-    capability: 'Service Agent with knowledge-grounded responses. SCRT2 API for native in-app chat. Live escalation to HCP via Omni-Channel.'
-  });
-  var mca = makeRect('e_mca', 1100, 340, 200, 46, 'Marketing Cloud Advanced', '#F49825', 'enrichmentData', {
-    icon: '\u{1F4E3}', title: 'Marketing Cloud Advanced', subtitle: 'Multi-Channel Orchestration (On Core)',
-    gap: 'No consent-aware multi-channel communications.',
-    capability: '6 channels: Email, SMS, RCS, WhatsApp, Push, In-App. Flow-based orchestration triggered by Data Cloud Segments.'
-  });
-  var patientReturn = makeRect('e_patientReturn', 1555, 180, 170, 56, 'Patient App (Enriched)', '#22C55E', 'enrichmentData', {
-    icon: '\u{1F4F1}', title: 'Patient App (Enriched)', subtitle: 'Receives Salesforce Intelligence',
-    gap: 'App receives raw data with no intelligence layer.',
-    capability: 'Receives AI-personalized content, conversational AI chat, and consent-aware notifications.'
-  });
-
-  graph.addCells([iceConn, dbConn, eitherOr, dataCloud, healthCloud, p13n, agentforce, mca, patientReturn]);
-
-  // ── Links ──
-  graph.addCells([
-    // AWS internal
-    makeLink('e_patientApp', 'e_apiGw', null, false, null, '#FF9900'),
-    makeLink('e_apiGw', 'e_lambda', null, false, null, '#FF9900'),
-    makeLink('e_lambda', 'e_dynamoDB', 'PII Store', true, null, '#EF4444'),
-    makeLink('e_lambda', 'e_kinesis', null, false, null, '#FF9900'),
-    makeLink('e_kinesis', 'e_glueETL', null, false, null, '#FF9900'),
-    makeLink('e_glueETL', 'e_bronze', null, false, [{x:380, y:265}], '#D97706'),
-    makeLink('e_bronze', 'e_silver', 'Pseudonymize', false, null, '#D97706'),
-    makeLink('e_silver', 'e_iceberg', null, false, null, '#D97706'),
-    makeLink('e_iceberg', 'e_databricks', null, true, null, '#FF3621'),
-    makeLink('e_iceberg', 'e_athena', null, true, null, '#FF9900'),
-    makeLink('e_iceberg', 'e_lakeForm', null, true, null, '#FF9900'),
-    makeLink('e_glueETL', 'e_dlq', 'Failures', true, null, '#9CA3AF'),
-
-    // Bridge: AWS → SF connectors
-    makeLink('e_iceberg', 'e_iceConn', 'Zero-Copy', false, [{x:760, y:303}, {x:760, y:123}], '#0D9DDA'),
-    makeLink('e_databricks', 'e_dbConn', 'Zero-Copy', true, [{x:760, y:378}, {x:760, y:243}], '#0D9DDA'),
-    makeLink('e_iceConn', 'e_dataCloud', null, false, null, '#0D9DDA'),
-    makeLink('e_dbConn', 'e_dataCloud', null, false, [{x:1085, y:243}, {x:1085, y:140}], '#0D9DDA'),
-
-    // Salesforce internal
-    makeLink('e_dataCloud', 'e_healthCloud', 'Re-ID Bridge', false, null, '#9050E9'),
-    makeLink('e_dataCloud', 'e_p13n', null, false, null, '#FE9339'),
-    makeLink('e_dataCloud', 'e_mca', 'Segments', false, [{x:1085, y:160}, {x:1085, y:363}], '#F49825'),
-    makeLink('e_healthCloud', 'e_agentforce', 'Clinical Context', false, null, '#6366F1'),
-
-    // To enriched app
-    makeLink('e_p13n', 'e_patientReturn', 'P13n API', false, null, '#22C55E'),
-    makeLink('e_agentforce', 'e_patientReturn', 'SCRT2 API', false, null, '#22C55E'),
-    makeLink('e_mca', 'e_patientReturn', 'Multi-Channel', false, [{x:1540, y:363}, {x:1540, y:218}], '#22C55E')
-  ]);
-
-  paper.scaleContentToFit({ padding: 24, maxScale: 1.4 });
-  attachEvents(paper, 'enrichmentData');
-}
+function buildEnrichment(){ builtE = true; }
 
 /* ===================================================================
    DATA MODEL DIAGRAM
