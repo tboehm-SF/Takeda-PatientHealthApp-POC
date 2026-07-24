@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react'
 import { AppProvider, useApp } from './context/AppContext'
 import StatusBar from './components/StatusBar'
 import BottomNav from './components/BottomNav'
 
 import ProfileModal from './components/ProfileModal'
 import D360Panel from './components/D360Panel'
-import DemoPersonas from './components/DemoPersonas'
+import SideNav from './components/SideNav'
 import HomeScreen from './screens/HomeScreen'
 import DailyCheckIn from './screens/DailyCheckIn'
 import EducationHub from './screens/EducationHub'
@@ -14,33 +13,7 @@ import SupportScreen from './screens/SupportScreen'
 import ArticleDetail from './screens/ArticleDetail'
 import SyncingOverlay from './screens/SyncingOverlay'
 
-// Detect if running as installed PWA (standalone mode)
-function useIsStandalone() {
-  const [standalone, setStandalone] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return (
-      window.matchMedia('(display-mode: standalone)').matches ||
-      window.navigator.standalone === true // iOS Safari
-    )
-  })
-
-  useEffect(() => {
-    const mq = window.matchMedia('(display-mode: standalone)')
-    const handler = (e) => setStandalone(e.matches || window.navigator.standalone === true)
-    mq.addEventListener?.('change', handler)
-
-    // Add class to body for CSS fallback
-    if (standalone || window.navigator.standalone) {
-      document.body.classList.add('standalone')
-    }
-
-    return () => mq.removeEventListener?.('change', handler)
-  }, [standalone])
-
-  return standalone
-}
-
-function PhoneApp({ isStandalone }) {
+function PhoneApp() {
   const { currentScreen, syncingState, profileOpen, setProfileOpen } = useApp()
 
   const screens = {
@@ -61,9 +34,6 @@ function PhoneApp({ isStandalone }) {
         <div className="dynamic-island" />
 
         <StatusBar />
-
-        {/* D360 panel embedded inside phone frame in standalone mode */}
-        {isStandalone && <D360Panel />}
 
         {/* Screen content */}
         <div className="screen-scroll" key={currentScreen}>
@@ -101,15 +71,12 @@ function DemoNote() {
 }
 
 export default function App() {
-  const isStandalone = useIsStandalone()
-
   return (
     <AppProvider>
-      {/* D360 panel outside phone frame in browser mode */}
-      {!isStandalone && <D360Panel />}
-      <PhoneApp isStandalone={isStandalone} />
-      {!isStandalone && <DemoPersonas />}
-      {!isStandalone && <DemoNote />}
+      <D360Panel />
+      <PhoneApp />
+      <SideNav />
+      <DemoNote />
     </AppProvider>
   )
 }

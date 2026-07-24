@@ -552,13 +552,14 @@
     font-size: 14px;
   }
 
-  /* ─────── Demo Personas panel (right side) ─────── */
-  .demo-personas {
+  /* ─────── Side Navigation (left side, combined panel) ─────── */
+  .side-nav {
     position: fixed;
     top: 20px;
     right: 20px;
     z-index: 9500;
     width: 260px;
+    max-height: calc(100vh - 40px);
     background: rgba(20, 20, 24, 0.95);
     backdrop-filter: blur(16px);
     border-radius: 12px;
@@ -567,9 +568,11 @@
     color: #e4e4e7;
     font-family: Inter, 'Helvetica Neue', Arial, sans-serif;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
-  .demo-personas-hdr {
+  .side-nav-hdr {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -581,7 +584,7 @@
     color: #fff;
   }
 
-  .demo-personas-dot {
+  .side-nav-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
@@ -590,13 +593,42 @@
     flex-shrink: 0;
   }
 
-  .demo-personas-list {
-    padding: 8px;
+  .side-nav-body {
+    overflow-y: auto;
+    flex: 1;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  }
+
+  .side-nav-body::-webkit-scrollbar { width: 4px; }
+  .side-nav-body::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 2px; }
+
+  .side-nav-section {
+    padding: 10px 12px 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  }
+
+  .side-nav-section:last-child { border-bottom: none; }
+
+  .side-nav-section-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: #a1a1aa;
+    margin-bottom: 8px;
+  }
+
+  .side-nav-personas {
     display: flex;
     flex-direction: column;
     gap: 4px;
   }
 
+  /* Persona card styles (reused from old DemoPersonas) */
   .demo-persona-card {
     display: flex;
     align-items: center;
@@ -680,6 +712,42 @@
     border: 1px solid rgba(250, 204, 21, 0.2);
   }
 
+  /* Architecture link buttons */
+  .side-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: transparent;
+    color: #e4e4e7;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    width: 100%;
+  }
+
+  .side-nav-link:hover {
+    background: rgba(189, 18, 10, 0.15);
+    border-color: rgba(189, 18, 10, 0.4);
+    color: #fff;
+  }
+
+  .side-nav-link-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .side-nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
   /* ── Article body HTML styles ────────────────────────────────── */
   .article-body h2 {
     font-size: 17px;
@@ -717,111 +785,7 @@
 
   /* Hide D360 + demo note + personas on screens narrower than the phone + panel */
   @media (max-width: 800px) {
-    .d360-badge, .d360-panel, .demo-note, .demo-personas { display: none; }
+    .d360-badge, .d360-panel, .demo-note, .side-nav { display: none; }
   }
 
-  /* ─────── Standalone PWA mode ─────── */
-  /* Looks like a real iPhone app — content fills screen, iOS handles chrome */
-  .standalone-app body,
-  body.standalone {
-    background: #ffffff;
-  }
-  .standalone-app #root,
-  body.standalone #root {
-    align-items: stretch;
-    justify-content: stretch;
-  }
-
-  @media (display-mode: standalone) {
-    body { background: #ffffff; }
-    #root { align-items: stretch; justify-content: stretch; }
-  }
-
-  /* Shared standalone rules (media query + JS class fallback) */
-  @media (display-mode: standalone) {
-    /* Hide all demo chrome */
-    .demo-note, .demo-personas { display: none !important; }
-
-    /* Remove fake phone bezel — let content fill screen */
-    .phone-frame {
-      width: 100vw;
-      height: 100vh;
-      border-radius: 0;
-      box-shadow: none;
-      background: white;
-    }
-    .phone-frame::before, .phone-frame::after { display: none; }
-
-    .phone-screen {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      border-radius: 0;
-      /* Respect the real iPhone notch / home indicator safe areas */
-      padding-top: env(safe-area-inset-top, 0px);
-      padding-bottom: env(safe-area-inset-bottom, 0px);
-    }
-
-    /* Hide fake dynamic island — real iPhone has one */
-    .dynamic-island { display: none; }
-
-    /* Hide our fake status bar — iOS shows the real one */
-    .status-bar { display: none; }
-
-    /* Hide fake home indicator — iOS handles it */
-    .home-indicator { display: none; }
-
-    /* D360 embedded as subtle overlay inside the app */
-    .d360-badge {
-      position: absolute;
-      top: calc(env(safe-area-inset-top, 0px) + 4px);
-      left: 8px;
-      z-index: 200;
-      padding: 4px 10px;
-      font-size: 10px;
-      border-radius: 14px;
-      opacity: 0.65;
-    }
-
-    .d360-panel {
-      position: absolute;
-      top: calc(env(safe-area-inset-top, 0px) + 4px);
-      left: 8px;
-      width: calc(100% - 16px);
-      max-height: 65vh;
-      z-index: 201;
-    }
-  }
-
-  /* iOS standalone fallback (class added by JS for older Safari) */
-  body.standalone .demo-note,
-  body.standalone .demo-personas { display: none !important; }
-
-  body.standalone .phone-frame {
-    width: 100vw; height: 100vh;
-    border-radius: 0; box-shadow: none; background: white;
-  }
-  body.standalone .phone-frame::before,
-  body.standalone .phone-frame::after { display: none; }
-
-  body.standalone .phone-screen {
-    top: 0; left: 0; right: 0; bottom: 0; border-radius: 0;
-    padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-  }
-  body.standalone .dynamic-island { display: none; }
-  body.standalone .status-bar { display: none; }
-  body.standalone .home-indicator { display: none; }
-
-  body.standalone .d360-badge {
-    position: absolute;
-    top: calc(env(safe-area-inset-top, 0px) + 4px);
-    left: 8px; z-index: 200; padding: 4px 10px;
-    font-size: 10px; border-radius: 14px; opacity: 0.65;
-  }
-  body.standalone .d360-panel {
-    position: absolute;
-    top: calc(env(safe-area-inset-top, 0px) + 4px);
-    left: 8px; width: calc(100% - 16px);
-    max-height: 65vh; z-index: 201;
-  }
 }
