@@ -110,7 +110,7 @@ export default function SideNav() {
               className="side-nav-link"
             >
               <span className="side-nav-link-icon">🧭</span>
-              <span>Demo Journey</span>
+              <span>Process Flow</span>
             </a>
           </div>
         </div>
