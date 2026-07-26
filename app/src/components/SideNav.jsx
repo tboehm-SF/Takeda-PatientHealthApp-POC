@@ -105,6 +105,13 @@ export default function SideNav() {
               <span className="side-nav-link-icon">🗂️</span>
               <span>Data Model</span>
             </a>
+            <a
+              href="/demo-journey.html"
+              className="side-nav-link"
+            >
+              <span className="side-nav-link-icon">🧭</span>
+              <span>Demo Journey</span>
+            </a>
           </div>
         </div>
       </div>
