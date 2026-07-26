@@ -3,7 +3,7 @@
 Generate a HAND-DRAWN Excalidraw swimlane of the Zasocitinib demo journey.
 
 Source process: cowork/demo_journey copy.html
-Three lanes:  Patient (Sarah)  ->  Salesforce Data Cloud  ->  Takeda Patient Delegate
+Three lanes:  Patient  ->  Salesforce Data Cloud  ->  Takeda Patient Delegate
 
 Hand-drawn look = roughness:1 + fontFamily:1 (Virgil).
 Colours are taken ONLY from the excalidraw skill's semantic palette.
@@ -124,7 +124,7 @@ def free_label(lid, text, x, y, color, size=13):
     })
 
 # ---- lane zones (draw first so boxes sit on top) --------------------------
-lane_zone("patient", "PATIENT   (Sarah)", *PATIENT)
+lane_zone("patient", "PATIENT", *PATIENT)
 lane_zone("dc",      "SALESFORCE DATA CLOUD", *DC)
 lane_zone("del",     "TAKEDA PATIENT DELEGATE", *DEL)
 

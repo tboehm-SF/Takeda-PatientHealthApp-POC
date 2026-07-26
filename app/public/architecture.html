@@ -50,11 +50,11 @@
   }
   .diagram-container{position:absolute;inset:0;display:none}
   .diagram-container.active{display:block}
-  /* All three tabs: static Excalidraw SVG, centered & fit-to-panel (vector, zoomable) */
-  #enrichment.active, #process.active, #datamodel.active{
+  /* All tabs: static Excalidraw SVG, centered & fit-to-panel (vector, zoomable) */
+  #enrichment.active, #process.active, #datamodel.active, #patientjourney.active{
     display:flex;align-items:center;justify-content:center;padding:16px
   }
-  #enrichment img, #process img, #datamodel img{
+  #enrichment img, #process img, #datamodel img, #patientjourney img{
     max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain
   }
 
@@ -102,6 +102,7 @@
   <button class="tab-btn active" data-tab="enrichment">Architecture Enrichment</button>
   <button class="tab-btn" data-tab="process">Data Flow Process</button>
   <button class="tab-btn" data-tab="datamodel">Data Model</button>
+  <button class="tab-btn" data-tab="patientjourney">Patient Journey</button>
 </div>
 
 <div class="canvas-wrap">
@@ -114,12 +115,15 @@
   <div id="datamodel" class="diagram-container">
     <img src="datamodel.svg" alt="Takeda Patient Health App — Data Model: 5 system zones (Mobile App, Health Cloud, Data Cloud, MC Next/P13n, Agentforce) with entity relationships.">
   </div>
+  <div id="patientjourney" class="diagram-container">
+    <img src="patient-journey.svg" alt="Patient Journey — hand-drawn swimlane: Patient → Salesforce Data Cloud → Takeda Patient Delegate, showing patient-reported data flowing into Data Cloud and personalised content returning.">
+  </div>
 </div>
 
 
 <script>
 (function(){
-/* ───── Tab switching (3 static Excalidraw SVG tabs) ───── */
+/* ───── Tab switching (static Excalidraw SVG tabs) ───── */
 var tabBtns = document.querySelectorAll('.tab-btn');
 
 function showTab(tab){
@@ -143,6 +147,7 @@ function fromHash(){
   var h = location.hash.replace('#','');
   if(h === 'process') return 'process';
   if(h === 'datamodel') return 'datamodel';
+  if(h === 'patientjourney') return 'patientjourney';
   return 'enrichment';
 }
 

@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { pushD360Event } from './D360Panel'
 import PERSONAS from '../data/personas'
 
 export default function SideNav() {
   const { profile, updateProfile } = useApp()
+  const [collapsed, setCollapsed] = useState(true)
 
   function applyPersona(persona) {
     const isAnon = persona.id === 'anon'
@@ -46,12 +48,19 @@ export default function SideNav() {
   )?.id ?? ((!profile.firstName && !profile.email) ? 'anon' : null)
 
   return (
-    <div className="side-nav">
-      <div className="side-nav-hdr">
+    <div className={`side-nav ${collapsed ? 'collapsed' : ''}`}>
+      <button
+        type="button"
+        className="side-nav-hdr"
+        onClick={() => setCollapsed((c) => !c)}
+        aria-expanded={!collapsed}
+      >
         <span className="side-nav-dot" />
-        <span>Demo Controls</span>
-      </div>
+        <span>Control Panel</span>
+        <span className="side-nav-chevron">{collapsed ? '▸' : '▾'}</span>
+      </button>
 
+      {!collapsed && (
       <div className="side-nav-body">
         {/* ── Personas ── */}
         <div className="side-nav-section">
@@ -115,6 +124,7 @@ export default function SideNav() {
           </div>
         </div>
       </div>
+      )}
     </div>
   )
 }
