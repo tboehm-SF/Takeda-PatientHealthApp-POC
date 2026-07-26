@@ -21,6 +21,18 @@
     .page-header h1 { font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 6px; }
     .page-header p  { font-size: 13px; color: #64748b; line-height: 1.6; }
 
+    /* ── Sub-nav ── */
+    .subnav { display: flex; gap: 8px; margin-bottom: 22px; }
+    .subnav a {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 600; text-decoration: none;
+      color: #475569; background: #fff; padding: 7px 14px;
+      border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      transition: color .15s, box-shadow .15s, transform .15s;
+    }
+    .subnav a:hover { color: #7c3aed; box-shadow: 0 3px 10px rgba(0,0,0,0.12); transform: translateY(-1px); }
+    .subnav a.current { color: #7c3aed; box-shadow: 0 0 0 1.5px #ddd6fe, 0 1px 4px rgba(0,0,0,0.08); }
+
     /* ── Legend ── */
     .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
     .legend-item {
@@ -102,6 +114,12 @@
     <h1>Zasocitinib Companion App · Salesforce Data Model</h1>
     <p>Object residency across Salesforce Core / Health Cloud, Data Cloud, MC Next on Core, and Agentforce.<br/>
        Arrows show data flow direction. Cross-system arrows represent key integration touchpoints.</p>
+  </div>
+
+  <!-- Sub-nav between the two static explorer pages -->
+  <div class="subnav">
+    <a href="./datamodel.html" class="current">◇ &nbsp;Salesforce Data Model</a>
+    <a href="./demo-journey.html">◈ &nbsp;Demo Journey</a>
   </div>
 
   <!-- Legend -->
