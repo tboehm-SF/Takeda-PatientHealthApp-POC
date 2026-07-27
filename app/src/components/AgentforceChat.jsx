@@ -130,6 +130,15 @@ function ChatWindow({
               style={msg.sender === 'user' ? { background: '#2DC8CE' } : {}}
             >
               {msg.text}
+              {msg.streaming && (
+                <span
+                  className="inline-block w-[2px] h-[14px] ml-0.5 align-text-bottom"
+                  style={{
+                    background: '#2DC8CE',
+                    animation: 'blink 0.6s step-end infinite',
+                  }}
+                />
+              )}
             </div>
           </div>
         ))}

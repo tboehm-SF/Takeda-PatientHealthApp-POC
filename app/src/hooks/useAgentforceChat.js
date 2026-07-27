@@ -13,14 +13,18 @@ import { pushD360Event } from '../components/D360Panel'
  *       delivery of agent responses (replaces polling)
  *   3.  Fall back to polling only if SSE fails (e.g. CORS / proxy issues)
  *   4.  Send user messages via v1 StaticContentMessage format
+ *   5.  Stream bot replies word-by-word for a fast, natural feel
  */
 
 const SCRT2_BASE = config.scrt2URL
 
 // Polling fallback constants (only used if SSE fails)
 const POLL_INTERVAL_MS = 2000
-const POLL_FAST_MS = 800
-const POLL_FAST_COUNT = 8
+const POLL_FAST_MS = 500
+const POLL_FAST_COUNT = 12
+
+// Streaming animation speed (ms per word)
+const STREAM_WORD_MS = 30
 
 export default function useAgentforceChat() {
   const [messages, setMessages] = useState([])
@@ -38,6 +42,7 @@ export default function useAgentforceChat() {
   const hasReceivedWelcomeRef = useRef(false)
   const sessionReadyRef = useRef(null)   // resolves when pre-warm finishes
   const usingSSERef = useRef(false)      // true once SSE is active
+  const streamTimersRef = useRef([])     // active streaming timers
 
   // ──────────────────── helpers ────────────────────
 
@@ -78,6 +83,53 @@ export default function useAgentforceChat() {
     }
     const data = await res.json()
     return data.conversationId
+  }
+
+  // ──────────────────── Streaming animation ────────────────────
+
+  /**
+   * Stream a bot message word-by-word into the messages list.
+   * This creates the illusion of real-time typing even though the
+   * full response arrived at once from the server.
+   */
+  function streamBotMessage(fullText, msgId) {
+    const words = fullText.split(/(\s+)/) // preserve whitespace tokens
+    let displayed = ''
+    let wordIndex = 0
+
+    // Insert the message immediately with just the first word
+    displayed = words[0] || ''
+    wordIndex = 1
+    setMessages((prev) => [
+      ...prev,
+      { id: msgId, sender: 'bot', text: displayed, streaming: true },
+    ])
+    // Hide typing dots now that text is appearing
+    setIsTyping(false)
+
+    const tick = () => {
+      if (wordIndex >= words.length) {
+        // Streaming complete — mark as done
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === msgId ? { ...m, streaming: false } : m,
+          ),
+        )
+        return
+      }
+      displayed += words[wordIndex]
+      wordIndex++
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === msgId ? { ...m, text: displayed } : m,
+        ),
+      )
+      const timer = setTimeout(tick, STREAM_WORD_MS)
+      streamTimersRef.current.push(timer)
+    }
+
+    const timer = setTimeout(tick, STREAM_WORD_MS)
+    streamTimersRef.current.push(timer)
   }
 
   // ──────────────────── SSE (primary) ────────────────────
@@ -226,11 +278,9 @@ export default function useAgentforceChat() {
       return
     }
 
-    setIsTyping(false)
-    setMessages((prev) => [
-      ...prev,
-      { id: `bot-${Date.now()}-${Math.random()}`, sender: 'bot', text },
-    ])
+    // Stream the response word-by-word for a fast, natural feel
+    const msgId = `bot-${Date.now()}-${Math.random()}`
+    streamBotMessage(text, msgId)
     pushD360Event('Agent Response Received', 'agentforce')
   }
 
@@ -277,17 +327,14 @@ export default function useAgentforceChat() {
                 continue
               }
               foundNewBotMessage = true
-              setMessages((prev) => [
-                ...prev,
-                { id: `bot-${Date.now()}-${Math.random()}`, sender: 'bot', text },
-              ])
+              const msgId = `bot-${Date.now()}-${Math.random()}`
+              streamBotMessage(text, msgId)
               pushD360Event('Agent Response Received', 'agentforce')
             }
           }
         }
 
         if (foundNewBotMessage) {
-          setIsTyping(false)
           pollCountRef.current = 0
         }
         pollCountRef.current++
@@ -308,7 +355,7 @@ export default function useAgentforceChat() {
     setTimeout(() => {
       poll()
       scheduleNext()
-    }, 300)
+    }, 200)
   }
 
   // ──────────────────── Payload helpers ────────────────────
@@ -394,7 +441,7 @@ export default function useAgentforceChat() {
           conversationIdRef.current = await createConversation(tokenRef.current)
           connectSSE(tokenRef.current, conversationIdRef.current)
           // Brief pause to let the welcome dialog settle
-          await new Promise((r) => setTimeout(r, 800))
+          await new Promise((r) => setTimeout(r, 600))
           setIsConnecting(false)
         } else {
           // Reset poll counter for fast polling after new message (fallback mode)
@@ -445,7 +492,7 @@ export default function useAgentforceChat() {
     [],
   )
 
-  // Cleanup SSE + polling on unmount
+  // Cleanup SSE + polling + streaming on unmount
   useEffect(() => {
     return () => {
       if (abortRef.current) {
@@ -456,6 +503,9 @@ export default function useAgentforceChat() {
         clearTimeout(pollingRef.current)
         pollingRef.current = null
       }
+      // Clear any active streaming timers
+      streamTimersRef.current.forEach(clearTimeout)
+      streamTimersRef.current = []
     }
   }, [])
 
