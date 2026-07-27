@@ -3,6 +3,18 @@
   command = "npm run build"
   publish = "dist"
 
+[functions]
+  # Relative to base ("app"), so "../netlify/functions" → repo_root/netlify/functions
+  directory = "../netlify/functions"
+  node_bundler = "esbuild"
+
+# Route all /api/dc/* calls to the dc-ingest Netlify Function
+[[redirects]]
+  from = "/api/dc"
+  to = "/.netlify/functions/dc-ingest"
+  status = 200
+  force = true
+
 # Proxy SCRT2 API calls to Salesforce to avoid CORS issues
 [[redirects]]
   from = "/api/scrt2/*"

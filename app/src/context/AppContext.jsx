@@ -106,10 +106,11 @@ export function AppProvider({ children }) {
   const [syncingState, setSyncingState] = useState(null) // null | 'syncing' | 'personalising' | 'done'
 
   function syncToDC(nrs, psodisk) {
-    fetch('/checkin', {
+    fetch('/api/dc', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        action: 'checkin',
         deviceId: profile.deviceId,
         checkInDatetime: checkInSessionTime,
         weekOnTherapy: patient.weekOnTherapy,
@@ -142,10 +143,11 @@ export function AppProvider({ children }) {
 
   function confirmDose() {
     setTodayDoseConfirmed(true)
-    fetch('/adherence', {
+    fetch('/api/dc', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        action: 'adherence',
         deviceId: profile.deviceId,
         doseDatetime: new Date().toISOString(),
         doseConfirmed: true,

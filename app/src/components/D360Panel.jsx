@@ -31,6 +31,60 @@ export function setBeaconDeviceId(id) {
   _beaconDeviceId = id
 }
 
+// ──── Beacon send queue (batches events to reduce network calls) ────
+let _beaconQueue = []
+let _beaconTimer = null
+const BEACON_BATCH_INTERVAL = 2000 // flush every 2s
+const BEACON_ENDPOINT = '/api/dc'
+
+function flushBeaconQueue() {
+  if (_beaconQueue.length === 0) return
+  const batch = _beaconQueue.splice(0)
+  _beaconTimer = null
+
+  fetch(BEACON_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'beacon', events: batch }),
+  })
+    .then((res) => {
+      if (!res.ok) {
+        console.warn('%c[Beacon]%c DC ingest returned ' + res.status, 'color: #e74c3c; font-weight: bold;', 'color: inherit;')
+      } else {
+        console.log(
+          `%c[Beacon]%c ✓ ${batch.length} event(s) ingested to Data Cloud`,
+          'color: #00b894; font-weight: bold;',
+          'color: inherit;',
+        )
+      }
+    })
+    .catch((err) => {
+      console.warn('%c[Beacon]%c DC ingest failed (non-blocking):', 'color: #e74c3c; font-weight: bold;', 'color: inherit;', err.message)
+    })
+}
+
+function enqueueBeaconEvent(dcEvent) {
+  _beaconQueue.push(dcEvent)
+  if (!_beaconTimer) {
+    _beaconTimer = setTimeout(flushBeaconQueue, BEACON_BATCH_INTERVAL)
+  }
+}
+
+// Flush remaining events when the user navigates away
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    if (_beaconQueue.length > 0) {
+      const payload = JSON.stringify({ action: 'beacon', events: _beaconQueue.splice(0) })
+      // Use sendBeacon for reliable delivery during page unload
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(BEACON_ENDPOINT, new Blob([payload], { type: 'application/json' }))
+      } else {
+        fetch(BEACON_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true })
+      }
+    }
+  })
+}
+
 export function pushD360Event(name, type = 'engagement', detail) {
   const entry = {
     name,
@@ -68,6 +122,12 @@ export function pushD360Event(name, type = 'engagement', detail) {
     sourceUrl: window.location.href,
     sourceChannel: 'PatientApp',
     category: type === 'identity_resolution' ? 'Profile' : type === 'consent' ? 'Consent' : 'Engagement',
+    // AppEngagementEvents schema fields
+    pageName: name,
+    deviceType: 'mobile_app',
+    durationSeconds: 0,
+    productName: 'Zasocitinib',
+    contactId: detail?.email || '',
   }
 
   if (type === 'identity' || type === 'identity_resolution') {
@@ -83,6 +143,9 @@ export function pushD360Event(name, type = 'engagement', detail) {
     'color: inherit;',
     JSON.stringify([dcEvent], null, 2),
   )
+
+  // ──── Send to Data Cloud via Netlify Function (batched) ────
+  enqueueBeaconEvent(dcEvent)
 }
 
 function useD360Events() {
