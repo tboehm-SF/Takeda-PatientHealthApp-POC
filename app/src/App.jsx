@@ -36,7 +36,7 @@ function PhoneApp() {
         <StatusBar />
 
         {/* Screen content */}
-        <div className="screen-scroll" key={currentScreen}>
+        <div className="screen-scroll" key={currentScreen} data-screen={currentScreen}>
           <Screen />
         </div>
 

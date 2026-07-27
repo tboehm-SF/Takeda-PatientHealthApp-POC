@@ -49,6 +49,25 @@ export default function ProfileModal({ onClose }) {
     }
 
     pushD360Event('Profile Saved', 'engagement')
+
+    // ── Bridge to Salesforce Interactions Web SDK ──
+    // Dispatch identity event if user has email
+    if (form.email) {
+      window.dispatchEvent(new CustomEvent('dc:identity', {
+        detail: {
+          firstName: form.firstName || '',
+          lastName: form.lastName || '',
+          email: form.email,
+        }
+      }))
+    }
+    // Dispatch consent change event
+    if (form.emailConsent !== profile.emailConsent) {
+      window.dispatchEvent(new CustomEvent('dc:consent', {
+        detail: { granted: form.emailConsent }
+      }))
+    }
+
     updateProfile(form)
     onClose()
   }

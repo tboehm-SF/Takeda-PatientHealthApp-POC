@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { pushD360Event } from '../components/D360Panel'
 
@@ -19,6 +20,18 @@ export default function ArticleDetail() {
   const tagColor = article.tagColor?.value ?? article.tagColor ?? 'bg-gray-100 text-gray-700'
   const gradient = article.gradient?.value ?? article.gradient ?? 'from-gray-400 to-gray-600'
   const readTime = article.readTime?.value ?? article.readTime ?? ''
+
+  // Bridge to Web SDK — track article view
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('dc:article-view', {
+      detail: {
+        articleId: selectedArticle.managedContentId || title.toLowerCase().replace(/\s+/g, '-'),
+        title: title,
+        category: category || tag,
+        contentType: 'Patient Education',
+      }
+    }))
+  }, [selectedArticle])
 
   function handleBack() {
     pushD360Event('Article Back', 'navigation')

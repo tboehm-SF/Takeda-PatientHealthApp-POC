@@ -131,6 +131,10 @@ export function AppProvider({ children }) {
     setPsodiskScores(psodisk)
     setSyncingState('syncing')
     syncToDC(nrs, psodisk)
+    // Bridge to Web SDK
+    window.dispatchEvent(new CustomEvent('dc:checkin-submitted', {
+      detail: { nrsScore: nrs, psodiskScores: psodisk }
+    }))
 
     setTimeout(() => setSyncingState('personalising'), 1500)
     setTimeout(() => setSyncingState('done'), 3000)
@@ -143,6 +147,8 @@ export function AppProvider({ children }) {
 
   function confirmDose() {
     setTodayDoseConfirmed(true)
+    // Bridge to Web SDK
+    window.dispatchEvent(new CustomEvent('dc:dose-confirmed'))
     fetch('/api/dc', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
