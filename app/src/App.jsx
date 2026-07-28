@@ -62,7 +62,7 @@ function DemoNote() {
     <div className="demo-note">
       <span className="demo-note-icon">ℹ️</span>
       <span>
-        <strong>Demo mode</strong> — Tap the profile initials to add email &amp; grant consent.
+        Tap the profile initials to add email &amp; grant consent.
         Identity stitches from anonymous → known in real time.
         Events are pushed via the real-time engine to Data Cloud.
       </span>
